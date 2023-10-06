@@ -1,5 +1,5 @@
 import torch
-import models
+import model
 from config import cfg
 
 

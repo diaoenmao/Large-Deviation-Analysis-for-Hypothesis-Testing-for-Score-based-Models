@@ -7,13 +7,13 @@ import time
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-import models
+import model
 from config import cfg, process_args
 from data import fetch_dataset, make_data_loader
-from metrics import Metric
+from metric import Metric
 from utils import save, load, to_device, process_control, resume, collate, make_footprint
 from logger import make_logger
-from modules import GoodnessOfFit
+from module import GoodnessOfFit
 
 cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='cfg')

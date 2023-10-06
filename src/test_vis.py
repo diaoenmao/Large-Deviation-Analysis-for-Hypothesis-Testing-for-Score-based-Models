@@ -2,7 +2,7 @@ import argparse
 import os
 import torch
 import torch.backends.cudnn as cudnn
-import models
+import model
 import numpy as np
 import matplotlib.pyplot as plt
 from config import cfg, process_args
@@ -91,14 +91,14 @@ if __name__ == "__main__":
         input = next(iter(data_loader['test']))
         input = collate(input)
         if data_name == 'MVN':
-            null_model = models.mvn(input['null_param'])
-            alter_model = models.mvn(input['alter_param'])
+            null_model = model.mvn(input['null_param'])
+            alter_model = model.mvn(input['alter_param'])
         elif data_name == 'GMM':
-            null_model = models.gmm(input['null_param'])
-            alter_model = models.gmm(input['alter_param'])
+            null_model = model.gmm(input['null_param'])
+            alter_model = model.gmm(input['alter_param'])
         elif data_name == 'RBM':
-            null_model = models.rbm(input['null_param'])
-            alter_model = models.rbm(input['alter_param'])
+            null_model = model.rbm(input['null_param'])
+            alter_model = model.rbm(input['alter_param'])
         else:
             raise ValueError('Not valid data name')
         vis(null_model, alter_model, input['null'], input['alter'], data_name)

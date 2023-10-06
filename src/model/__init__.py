@@ -1,5 +1,4 @@
-from .utils import *
+from .model import *
 from .mvn import *
-from .gmm import *
 from .rbm import *
 from .exp import *

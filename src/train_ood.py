@@ -7,10 +7,10 @@ import shutil
 import time
 import torch
 import torch.backends.cudnn as cudnn
-import models
+import model
 from config import cfg, process_args
 from data import fetch_dataset, make_data_loader
-from metrics import Metric
+from metric import Metric
 from utils import save, load, to_device, process_control, resume, collate, process_dataset, make_optimizer, \
     make_scheduler
 from logger import make_logger
@@ -42,7 +42,7 @@ def runExperiment():
     dataset = fetch_dataset(cfg['data_name'])
     process_dataset(dataset)
     data_loader = make_data_loader(dataset, 'ood')
-    model = eval('models.{}(cfg["rbm"]).to(cfg["device"])'.format(cfg['model_name']))
+    model = eval('model.{}(cfg["rbm"]).to(cfg["device"])'.format(cfg['model_name']))
     optimizer = make_optimizer(model.parameters(), 'ood')
     scheduler = make_scheduler(optimizer, 'ood')
     metric = Metric(cfg['data_name'], {'train': ['Loss'], 'test': ['Loss']})

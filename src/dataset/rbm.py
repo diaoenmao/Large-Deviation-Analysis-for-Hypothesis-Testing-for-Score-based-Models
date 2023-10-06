@@ -1,7 +1,7 @@
 import os
 import torch
 import hashlib
-import models
+import model
 from torch.utils.data import Dataset
 from utils import check_exists, makedir_exist_ok, save, load, make_footprint
 from config import cfg
@@ -67,14 +67,14 @@ class RBM(Dataset):
         with torch.no_grad():
             d = self.v.size(0)
             params = {'W': self.W, 'v': self.v, 'h': self.h}
-            null_rbm = models.rbm(params).to(cfg['device'])
+            null_rbm = model.rbm(params).to(cfg['device'])
             null, alter = [], []
             alter_W = []
             for i in range(self.num_trials):
                 ptb_W = self.ptb_W * torch.randn(self.W.size())
                 alter_W_i = self.W + ptb_W
                 params_i = {'W': alter_W_i, 'v': self.v, 'h': self.h}
-                alter_rbm = models.rbm(params_i).to(cfg['device'])
+                alter_rbm = model.rbm(params_i).to(cfg['device'])
                 v = torch.randn(self.num_samples, d, device=cfg['device'])
                 null_i = null_rbm(v, self.num_iters)
                 alter_i = alter_rbm(v, self.num_iters)

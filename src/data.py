@@ -2,8 +2,8 @@ import copy
 import os
 import torch
 import numpy as np
-import datasets
-import models
+import dataset
+import model
 from config import cfg
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
@@ -15,16 +15,16 @@ def fetch_dataset(data_name, params=None, verbose=True):
         print('fetching data {}...'.format(data_name))
     root = os.path.join('data', data_name)
     if data_name in ['MVN']:
-        dataset['test'] = datasets.MVN(root, **params)
+        dataset['test'] = dataset.MVN(root, **params)
     elif data_name in ['GMM']:
-        dataset['test'] = datasets.GMM(root, **params)
+        dataset['test'] = dataset.GMM(root, **params)
     elif data_name in ['RBM']:
-        dataset['test'] = datasets.RBM(root, **params)
+        dataset['test'] = dataset.RBM(root, **params)
     elif data_name in ['KDDCUP99']:
-        dataset['train'] = datasets.KDDCUP99(root, 'train')
-        dataset['test'] = datasets.KDDCUP99(root, 'test')
+        dataset['train'] = dataset.KDDCUP99(root, 'train')
+        dataset['test'] = dataset.KDDCUP99(root, 'test')
     elif data_name in ['EXP']:
-        dataset['test'] = datasets.EXP(root, **params)
+        dataset['test'] = dataset.EXP(root, **params)
     else:
         raise ValueError('Not valid dataset name')
     if verbose:
