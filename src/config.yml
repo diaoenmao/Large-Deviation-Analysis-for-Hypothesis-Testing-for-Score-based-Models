@@ -2,9 +2,8 @@
 # control
 control:
   data_name: MVN
-  test_mode: cvm
+  test_mode: hst
   ptb: 0.1-0
-  num_samples: 100
 # experiment
 num_workers: 0
 init_seed: 0

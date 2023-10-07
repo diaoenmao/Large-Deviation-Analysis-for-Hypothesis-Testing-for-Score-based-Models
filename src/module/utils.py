@@ -1,4 +1,5 @@
 import numpy as np
+import hashlib
 import torch
 from collections.abc import Iterable, Sequence, Mapping
 from itertools import repeat
@@ -31,3 +32,10 @@ def recur(fn, input, *args):
     else:
         raise ValueError('Not valid input type')
     return output
+
+
+def make_footprint(params):
+    hash_name = '_'.join([str(params[x]) for x in params]).encode('utf-8')
+    m = hashlib.sha256(hash_name)
+    footprint = m.hexdigest()
+    return footprint
