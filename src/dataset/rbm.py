@@ -3,7 +3,7 @@ import torch
 import hashlib
 import model
 from torch.utils.data import Dataset
-from utils import check_exists, makedir_exist_ok, save, load, make_footprint
+from module import check_exists, makedir_exist_ok, save, load, make_footprint
 from config import cfg
 
 
@@ -25,8 +25,7 @@ class RBM(Dataset):
         if not check_exists(os.path.join(self.processed_folder, split_name)):
             print('Not exists {}, create from scratch with {}.'.format(split_name, params))
             self.process()
-        self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)),
-                                                mode='pickle')
+        self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)))
 
     def __getitem__(self, index):
         null, alter = torch.tensor(self.null[index]), torch.tensor(self.alter[index])
@@ -50,8 +49,7 @@ class RBM(Dataset):
         if not check_exists(self.raw_folder):
             self.download()
         dataset = self.make_data()
-        save(dataset, os.path.join(self.processed_folder, '{}_{}'.format(self.data_name, self.footprint)),
-             mode='pickle')
+        save(dataset, os.path.join(self.processed_folder, '{}_{}'.format(self.data_name, self.footprint)))
         return
 
     def download(self):

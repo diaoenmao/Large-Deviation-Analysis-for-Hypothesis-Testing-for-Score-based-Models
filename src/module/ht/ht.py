@@ -1,45 +1,25 @@
 import torch
 import model
 from config import cfg
-from .nonparam import CVM, KS
-from .ksd import KSD
-from .mmd import MMD
 from .lrt import LRT
 from .hst import HST
 
 
-class GoodnessOfFit:
-    def __init__(self, test_mode, alter_num_samples, alter_noise, alpha=0.05):
-        self.test_mode = test_mode
-        self.alter_num_samples = alter_num_samples
-        self.alter_noise = alter_noise
-        self.alpha = alpha
-        self.gof = self.make_gof()
-        self.statistic = {'t1': [], 't2': []}
-        self.pvalue = {'t1': [], 't2': []}
+class HypothesisTest:
+    def __init__(self, null_data, ht_mode):
+        self.ht_mode = ht_mode
+        self.ht = self.make_ht(null_data)
+        self.threshold = []
 
-    def make_gof(self):
-        if self.test_mode == 'cvm':
-            gof = CVM()
-        elif self.test_mode == 'ks':
-            gof = KS()
-        elif self.test_mode == 'ksd-u':
-            gof = KSD(cfg['num_bootstrap'], False)
-        elif self.test_mode == 'ksd-v':
-            gof = KSD(cfg['num_bootstrap'], True)
-        elif self.test_mode == 'mmd':
-            gof = MMD(cfg['num_bootstrap'])
-        elif self.test_mode in ['lrt-b-g', 'lrt-b-e']:
-            gof = LRT(cfg['num_bootstrap'], True)
-        elif self.test_mode in ['lrt-chi2-g', 'lrt-chi2-e']:
-            gof = LRT(cfg['num_bootstrap'], False)
-        elif self.test_mode in ['hst-b-g', 'hst-b-e']:
-            gof = HST(cfg['num_bootstrap'], True)
-        elif self.test_mode in ['hst-chi2-g', 'hst-chi2-e']:
-            gof = HST(cfg['num_bootstrap'], False)
+    def make_ht(self):
+        ht_mode_list = self.ht_mode.split('-')
+        if self.ht_mode in ['lrt-t', 'lrt-e']:
+            ht = LRT(model, ht_mode_list[1])
+        elif self.ht_mode in ['hst-t', 'hst-e']:
+            ht = HST(model, ht_mode_list[1])
         else:
-            raise ValueError('Not valid test mode')
-        return gof
+            raise ValueError('Not valid ht mode')
+        return ht
 
     def test(self, input):
         alter_noise = cfg['alter_noise']
@@ -108,9 +88,7 @@ class GoodnessOfFit:
                   'pvalue_t2': pvalue_t2}
         return output
 
-    def update(self, output):
-        self.statistic['t1'].append(output['statistic_t1'])
-        self.statistic['t2'].append(output['statistic_t2'])
-        self.pvalue['t1'].append(output['pvalue_t1'])
-        self.pvalue['t2'].append(output['pvalue_t2'])
-        return
+
+def make_ht(dataset, model, ht_mode):
+    null_data = torch.tensor(dataset['test'].null)
+    return HypothesisTest(null_data, model, ht_mode)

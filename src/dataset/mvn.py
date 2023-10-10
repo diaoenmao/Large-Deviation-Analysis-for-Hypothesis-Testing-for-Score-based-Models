@@ -2,7 +2,7 @@ import os
 import torch
 import hashlib
 from torch.utils.data import Dataset
-from utils import check_exists, makedir_exist_ok, save, load, make_footprint
+from module import check_exists, makedir_exist_ok, save, load, make_footprint
 
 
 class MVN(Dataset):
@@ -22,8 +22,7 @@ class MVN(Dataset):
         if not check_exists(os.path.join(self.processed_folder, split_name)):
             print('Not exists {}, create from scratch with {}.'.format(split_name, params))
             self.process()
-        self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)),
-                                                mode='pickle')
+        self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)))
     def __getitem__(self, index):
         null, alter = torch.tensor(self.null[index]), torch.tensor(self.alter[index])
         null_param = {'mean': self.mean, 'logvar': self.logvar}
@@ -47,8 +46,7 @@ class MVN(Dataset):
         if not check_exists(self.raw_folder):
             self.download()
         dataset = self.make_data()
-        save(dataset, os.path.join(self.processed_folder, '{}_{}'.format(self.data_name, self.footprint)),
-             mode='pickle')
+        save(dataset, os.path.join(self.processed_folder, '{}_{}'.format(self.data_name, self.footprint)))
         return
 
     def download(self):
@@ -86,10 +84,10 @@ class MVN(Dataset):
                         alter_logvar.append(alter_logvar_i)
             alter_logvar = torch.cat(alter_logvar, dim=0)
         if d == 1:
-            alter_normal = torch.distributions.normal.Normal(alter_mean, alter_logvar.exp().sqrt())
+            alter_mvn = torch.distributions.normal.Normal(alter_mean, alter_logvar.exp().sqrt())
         else:
-            alter_normal = torch.distributions.multivariate_normal.MultivariateNormal(alter_mean, alter_logvar.exp())
-        alter = alter_normal.sample((self.num_samples,))
+            alter_mvn = torch.distributions.multivariate_normal.MultivariateNormal(alter_mean, alter_logvar.exp())
+        alter = alter_mvn.sample((self.num_samples,))
         alter = alter.permute(1, 0, 2)
         null, alter = null.numpy(), alter.numpy()
         meta = {'mean': alter_mean.numpy(), 'logvar': alter_logvar.numpy()}

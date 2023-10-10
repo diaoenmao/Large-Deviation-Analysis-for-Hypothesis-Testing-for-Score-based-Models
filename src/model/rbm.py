@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from config import cfg
-from utils import make_optimizer
+from .model import make_optimizer
 
 
 class RBM(nn.Module):

@@ -1,19 +1,13 @@
 import argparse
-import datetime
 import os
-
-os.environ['OMP_NUM_THREADS'] = '1'
 import time
-import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-import model
 from config import cfg, process_args
-from data import fetch_dataset, make_data_loader
-from metric import Metric
-from utils import save, load, to_device, process_control, resume, collate, make_footprint
-from logger import make_logger
-from module import GoodnessOfFit
+from dataset import make_dataset, make_data_loader, process_dataset, collate
+from metric import make_metric, make_logger
+from model import make_model
+from module import save, load, to_device, process_control, resume, make_footprint, make_ht
 
 cudnn.benchmark = True
 parser = argparse.ArgumentParser(description='cfg')
@@ -25,8 +19,8 @@ process_args(args)
 
 
 def main():
-    seeds = list(range(cfg['init_seed'], cfg['init_seed'] + cfg['num_experiments']))
-    for i in range(cfg['num_experiments']):
+    seeds = list(range(cfg['init_seed'], cfg['init_seed'] + cfg['num_experiment']))
+    for i in range(cfg['num_experiment']):
         model_tag_list = [str(seeds[i]), cfg['control_name']]
         cfg['model_tag'] = '_'.join([x for x in model_tag_list if x])
         print('Experiment: {}'.format(cfg['model_tag']))
@@ -40,14 +34,19 @@ def runExperiment():
     torch.manual_seed(cfg['seed'])
     torch.cuda.manual_seed(cfg['seed'])
     params = make_params(cfg['data_name'])
-    dataset = fetch_dataset(cfg['data_name'], params)
-    data_loader = make_data_loader(dataset, 'gof')
-    gof = GoodnessOfFit(cfg['test_mode'], cfg['alter_num_samples'], cfg['alter_noise'])
-    metric = Metric(cfg['data_name'], {'test': ['Power-t1', 'Power-t2']})
+    print(params)
+    exit()
+    result_path = os.path.join('output', 'result')
+    dataset = make_dataset(cfg['data_name'], params)
+    dataset = process_dataset(dataset)
+    null_model, alter_model = make_model(cfg['model_name'], params)
+    data_loader = make_data_loader(dataset, cfg['model_name'])
+    ht = make_ht(dataset, null_model, alter_model, cfg['ht_mode'])
+    metric = make_metric({'test': ['AUROC']})
     logger = make_logger(os.path.join('output', 'runs', 'test_{}'.format(cfg['model_tag'])))
-    test(data_loader['test'], gof, metric, logger)
-    result = {'cfg': cfg, 'logger': logger, 'gof': gof}
-    save(result, os.path.join('output', 'result', '{}.pt'.format(cfg['model_tag'])))
+    test(data_loader['test'], model, ht, metric, logger)
+    result = {'cfg': cfg, 'logger': logger, 'ht_state_dict': ht.state_dict()}
+    save(result, os.path.join(result_path, cfg['model_tag']))
     return
 
 
@@ -59,15 +58,6 @@ def make_params(data_name):
         ptb_mean, ptb_logvar = float(ptb_mean), float(ptb_logvar)
         params = {'num_trials': cfg['num_trials'], 'num_samples': cfg['num_samples'], 'mean': mean, 'logvar': logvar,
                   'ptb_mean': ptb_mean, 'ptb_logvar': ptb_logvar}
-    elif data_name == 'GMM':
-        mean = cfg['gmm']['mean']
-        logvar = cfg['gmm']['logvar']
-        logweight = cfg['gmm']['logweight']
-        ptb_mean, ptb_logvar, ptb_logweight = cfg['ptb'].split('-')
-        ptb_mean, ptb_logvar, ptb_logweight = float(ptb_mean), float(ptb_logvar), float(ptb_logweight)
-        params = {'num_trials': cfg['num_trials'], 'num_samples': cfg['num_samples'],
-                  'mean': mean, 'logvar': logvar, 'logweight': logweight,
-                  'ptb_mean': ptb_mean, 'ptb_logvar': ptb_logvar, 'ptb_logweight': ptb_logweight}
     elif data_name == 'RBM':
         W = cfg['rbm']['W']
         v = cfg['rbm']['v']
@@ -86,32 +76,33 @@ def make_params(data_name):
     else:
         raise ValueError('Not valid data name')
     footprint = make_footprint(params)
-    params = load(os.path.join('output', 'params', data_name, '{}_{}.pkl'.format(data_name, footprint)))
+    params = load(os.path.join('output', 'params', data_name, '{}_{}'.format(data_name, footprint)))
     return params
 
 
-def test(data_loader, gof, metric, logger):
+def test(data_loader, model, ht, metric, logger):
     start_time = time.time()
     for i, input in enumerate(data_loader):
-        logger.safe(True)
         input = collate(input)
+        print(input['null'].size())
+        exit()
+        input_size = input['null'].size(0)
         input = to_device(input, cfg['device'])
-        output = gof.test(input)
-        gof.update(output)
-        evaluation = metric.evaluate(metric.metric_name['test'], input, output)
-        logger.append(evaluation, 'test', 1)
+        output = ht.test(input, model)
+        evaluation = metric.evaluate('test', 'batch', input, output)
+        logger.append(evaluation, 'test', input_size)
         if i % np.ceil((len(data_loader) * cfg['log_interval'])) == 0:
             batch_time = (time.time() - start_time) / (i + 1)
             exp_finished_time = datetime.timedelta(seconds=round(batch_time * (len(data_loader) - i - 1)))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),
                              'Test Iter: {}/{}({:.0f}%)'.format(i + 1, len(data_loader), 100. * i / len(data_loader)),
                              'Experiment Finished Time: {}'.format(exp_finished_time)]}
-            logger.append(info, 'test', mean=False)
+            logger.append(info, 'test')
             print(logger.write('test', metric.metric_name['test']))
-        logger.safe(False)
+        logger.save(True)
     info = {'info': ['Model: {}'.format(cfg['model_tag']),
                      'Test Iter: {}/{}(100%)'.format(len(data_loader), len(data_loader))]}
-    logger.append(info, 'test', mean=False)
+    logger.append(info, 'test')
     print(logger.write('test', metric.metric_name['test']))
     return
 

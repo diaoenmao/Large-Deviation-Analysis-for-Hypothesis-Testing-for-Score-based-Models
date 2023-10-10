@@ -2,12 +2,14 @@
 # control
 control:
   data_name: MVN
-  test_mode: hst
+  model_name: mvn
+  ht_mode: hst
   ptb: 0.1-0
 # experiment
-num_workers: 0
+pin_memory: True
+num_worker: 0
 init_seed: 0
-num_experiments: 1
+num_experiment: 1
 log_interval: 0.25
 device: cuda
 world_size: 1

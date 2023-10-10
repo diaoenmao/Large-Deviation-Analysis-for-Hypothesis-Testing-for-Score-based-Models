@@ -6,8 +6,8 @@ import model
 from config import cfg
 
 
-def make_model(model_name):
-    model = eval('model.{}()'.format(model_name))
+def make_model(model_name, params):
+    model = eval('model.{}(params)'.format(model_name))
     model = model.to(cfg['device'])
     return model
 

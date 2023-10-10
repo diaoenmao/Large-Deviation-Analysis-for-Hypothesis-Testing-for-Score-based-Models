@@ -1,4 +1,3 @@
-from .gof import *
+from .ht import *
 from .lrt import *
 from .hst import *
-from .ood import *

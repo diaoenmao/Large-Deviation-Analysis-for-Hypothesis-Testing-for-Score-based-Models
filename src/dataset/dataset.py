@@ -8,15 +8,13 @@ from torch.utils.data.dataloader import default_collate
 from config import cfg
 
 
-def fetch_dataset(data_name, params=None, verbose=True):
+def make_dataset(data_name, params=None, verbose=True):
     dataset_ = {}
     if verbose:
         print('fetching data {}...'.format(data_name))
     root = os.path.join('data', data_name)
     if data_name in ['MVN']:
         dataset_['test'] = dataset.MVN(root, **params)
-    elif data_name in ['GMM']:
-        dataset_['test'] = dataset.GMM(root, **params)
     elif data_name in ['RBM']:
         dataset_['test'] = dataset.RBM(root, **params)
     elif data_name in ['KDDCUP99']:
@@ -66,24 +64,19 @@ def make_data_loader(dataset, tag, batch_size=None, shuffle=None, sampler=None):
 
 def collate(input):
     for k in input:
-        input[k] = torch.stack(input[k], 0)
+        if k in ['null_param', 'alter_param']:
+            input[k] = input[k][0]
+        elif k in ['id', 'data', 'target']:
+            input[k] = torch.stack(input[k], 0)
+        else:
+            input[k] = torch.cat(input[k], 0)
     return input
-
-
-# def collate(input):
-#     for k in input:
-#         if k in ['null_param', 'alter_param']:
-#             input[k] = input[k][0]
-#         elif k in ['id', 'data', 'target']:
-#             input[k] = torch.stack(input[k], 0)
-#         else:
-#             input[k] = torch.cat(input[k], 0)
-#     return input
 
 def process_dataset(dataset):
     processed_dataset = dataset
     cfg['data_size'] = {k: len(processed_dataset[k]) for k in processed_dataset}
-    cfg['target_size'] = processed_dataset['train'].target_size
+    if cfg['data_name'] in ['KDDCUP99']:
+        cfg['target_size'] = processed_dataset['train'].target_size
     return processed_dataset
 
 

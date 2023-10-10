@@ -3,30 +3,25 @@ import torch.nn.functional as F
 from collections import defaultdict
 from config import cfg
 from module import recur
+from sklearn.metrics import roc_curve, auc
 
 
 def make_metric(metric_name):
-    if cfg['data_name'] in ['MNIST', 'FashionMNIST', 'SVHN', 'CIFAR10', 'CIFAR100']:
-        pivot = -float('inf')
-        pivot_direction = 'up'
-        pivot_name = 'Accuracy'
-        for k in metric_name:
-            metric_name[k].extend(['Accuracy'])
+    if cfg['data_name'] in ['KDDCUP99']:
+        pivot = float('inf')
+        pivot_direction = 'down'
+        pivot_name = 'Loss'
     else:
-        raise ValueError('Not valid data name')
+        pivot = None
+        pivot_name = None
+        pivot_direction = None
     metric = Metric(metric_name, pivot, pivot_direction, pivot_name)
     return metric
 
 
-def Power(pvalue, alpha):
-    pvalue = torch.tensor(pvalue)
-    power = (pvalue < alpha).float().mean().item()
-    return power
-
-
-def AUCROC(output, target):
-    aucroc = roc_auc_score(target, output)
-    return aucroc
+def AUROC(fpr, fnr):
+    auroc = auc(fpr, 1 - fnr)
+    return auroc
 
 
 class Metric:
@@ -41,14 +36,9 @@ class Metric:
             for m in metric_name[split]:
                 if m == 'Loss':
                     metric[split][m] = {'mode': 'batch', 'metric': (lambda input, output: output['loss'].item())}
-                elif m == 'Accuracy':
+                elif m == 'AUROC':
                     metric[split][m] = {'mode': 'batch',
-                                        'metric': (
-                                            lambda input, output: recur(Accuracy, output['target'], input['target']))}
-                elif m == 'RMSE':
-                    metric[split][m] = {'mode': 'batch',
-                                        'metric': (
-                                            lambda input, output: recur(RMSE, output['target'], input['target']))}
+                                        'metric': (lambda input, output: recur(AUROC, output['fpr'], output['fnr']))}
                 else:
                     raise ValueError('Not valid metric name')
         return metric

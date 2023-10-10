@@ -3,8 +3,7 @@ import numpy as np
 import torch
 import pandas as pd
 from torch.utils.data import Dataset
-from utils import check_exists, makedir_exist_ok, save, load
-from .utils import make_classes_counts
+from module import check_exists, makedir_exist_ok, save, load
 
 
 class KDDCUP99(Dataset):
@@ -16,10 +15,8 @@ class KDDCUP99(Dataset):
         self.split = split
         if not check_exists(os.path.join(self.processed_folder)):
             self.process()
-        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}.pt'.format(self.split)),
-                                               mode='pickle')
-        self.classes_counts = make_classes_counts(self.target)
-        self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta.pt'), mode='pickle')
+        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}'.format(self.split)))
+        self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta'))
 
     def __getitem__(self, index):
         id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
@@ -42,9 +39,9 @@ class KDDCUP99(Dataset):
         if not check_exists(self.raw_folder):
             self.download()
         train_set, test_set, meta = self.make_data()
-        save(train_set, os.path.join(self.processed_folder, 'train.pt'), mode='pickle')
-        save(test_set, os.path.join(self.processed_folder, 'test.pt'), mode='pickle')
-        save(meta, os.path.join(self.processed_folder, 'meta.pt'), mode='pickle')
+        save(train_set, os.path.join(self.processed_folder, 'train'))
+        save(test_set, os.path.join(self.processed_folder, 'test'))
+        save(meta, os.path.join(self.processed_folder, 'meta'))
         return
 
     def download(self):
