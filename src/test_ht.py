@@ -34,17 +34,14 @@ def runExperiment():
     torch.manual_seed(cfg['seed'])
     torch.cuda.manual_seed(cfg['seed'])
     params = make_params(cfg['data_name'])
-    print(params)
-    exit()
     result_path = os.path.join('output', 'result')
     dataset = make_dataset(cfg['data_name'], params)
     dataset = process_dataset(dataset)
-    null_model, alter_model = make_model(cfg['model_name'], params)
     data_loader = make_data_loader(dataset, cfg['model_name'])
-    ht = make_ht(dataset, null_model, alter_model, cfg['ht_mode'])
+    ht = make_ht(cfg['ht_mode'])
     metric = make_metric({'test': ['AUROC']})
     logger = make_logger(os.path.join('output', 'runs', 'test_{}'.format(cfg['model_tag'])))
-    test(data_loader['test'], model, ht, metric, logger)
+    test(data_loader['test'], ht, metric, logger)
     result = {'cfg': cfg, 'logger': logger, 'ht_state_dict': ht.state_dict()}
     save(result, os.path.join(result_path, cfg['model_tag']))
     return
@@ -80,15 +77,14 @@ def make_params(data_name):
     return params
 
 
-def test(data_loader, model, ht, metric, logger):
+def test(data_loader, ht, metric, logger):
     start_time = time.time()
     for i, input in enumerate(data_loader):
         input = collate(input)
-        print(input['null'].size())
-        exit()
         input_size = input['null'].size(0)
         input = to_device(input, cfg['device'])
-        output = ht.test(input, model)
+        output = ht.test(input)
+        ht.update(output)
         evaluation = metric.evaluate('test', 'batch', input, output)
         logger.append(evaluation, 'test', input_size)
         if i % np.ceil((len(data_loader) * cfg['log_interval'])) == 0:

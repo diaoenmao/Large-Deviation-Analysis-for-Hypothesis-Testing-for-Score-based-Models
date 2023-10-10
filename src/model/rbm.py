@@ -69,9 +69,9 @@ class RBM(nn.Module):
     def fit(self, v):
         self.train(True)
         optimizer = make_optimizer([self.W], 'hst')
-        for epoch in range(cfg['hst']['num_iters']):
+        for epoch in range(cfg['rbm']['num_iters']):
             optimizer.zero_grad()
-            v_gibbs = self(v, 1)
+            v_gibbs = self.forward(v, 1)
             loss = self.free_energy(v).mean() - self.free_energy(v_gibbs).mean()
             loss = loss.mean()
             loss.backward()

@@ -8,8 +8,10 @@ def process_control():
     cfg['model_name'] = cfg['control']['model_name']
     cfg['ht_mode'] = cfg['control']['ht_mode']
     cfg['ptb'] = cfg['control']['ptb']
-    if 'num_training_samples' in cfg['control']:
-        cfg['num_training_samples'] = int(cfg['control']['num_training_samples'])
+    if 'num_samples_emp' in cfg['control']:
+        cfg['num_samples_emp'] = int(cfg['control']['num_samples_emp'])
+    else:
+        cfg['num_samples_emp'] = 'none'
     cfg['num_trials'] = 10
     cfg['num_samples'] = 10000
     if cfg['data_name'] in ['KDDCUP99']:
