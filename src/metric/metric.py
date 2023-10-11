@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from collections import defaultdict
 from config import cfg
 from module import recur
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import auc
 
 
 def make_metric(metric_name):

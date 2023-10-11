@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import model
 from config import cfg
-from .ht import compute_fpr_tpr_emp
 
 
 class LRT:
@@ -18,3 +17,5 @@ class LRT:
         score = 2 * (torch.log(alter_model.pdf(data)) - torch.log(null_model.pdf(data)))
         score = score.reshape(-1)
         return score
+
+

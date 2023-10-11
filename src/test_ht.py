@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import os
 import time
 import torch
@@ -42,7 +43,7 @@ def runExperiment():
     metric = make_metric({'test': ['AUROC']})
     logger = make_logger(os.path.join('output', 'runs', 'test_{}'.format(cfg['model_tag'])))
     test(data_loader['test'], ht, metric, logger)
-    result = {'cfg': cfg, 'logger': logger, 'ht_state_dict': ht.state_dict()}
+    result = {'cfg': cfg, 'logger_state_dict': logger.state_dict(), 'ht_state_dict': ht.state_dict()}
     save(result, os.path.join(result_path, cfg['model_tag']))
     return
 
@@ -87,7 +88,7 @@ def test(data_loader, ht, metric, logger):
         ht.update(output)
         evaluation = metric.evaluate('test', 'batch', input, output)
         logger.append(evaluation, 'test', input_size)
-        if i % np.ceil((len(data_loader) * cfg['log_interval'])) == 0:
+        if i % int((len(data_loader) * cfg['log_interval']) + 1) == 0:
             batch_time = (time.time() - start_time) / (i + 1)
             exp_finished_time = datetime.timedelta(seconds=round(batch_time * (len(data_loader) - i - 1)))
             info = {'info': ['Model: {}'.format(cfg['model_tag']),

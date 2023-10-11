@@ -4,7 +4,7 @@ import model
 from config import cfg
 from .lrt import LRT
 from .hst import HST
-
+from sklearn.metrics import roc_curve
 
 class HypothesisTest:
     def __init__(self, ht_mode):
@@ -21,20 +21,21 @@ class HypothesisTest:
             raise ValueError('Not valid ht mode')
         return ht
 
-    def make_threshold(self, null_samples, alter_samples, null_model, alter_model):
+    def make_threshold(self, null, alter, null_model, alter_model):
         with torch.no_grad():
-            data = torch.cat([null_samples, alter_samples], dim=0)
-            target = torch.cat([torch.zeros(null_samples.size(0)), torch.ones(alter_samples.size(0))], dim=0)
+            data = torch.cat([null, alter], dim=0)
+            target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0)
             score = self.ht.score(data, null_model, alter_model)
-            _, _, threshold = roc_curve(target.numpy(), score.numpy())
+            _, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
+            threshold = torch.tensor(threshold, device=data.device)
         return threshold
 
     def test(self, input):
         num_samples_emp = cfg['num_samples_emp']
         null, alter, null_param, alter_param = input['null'], input['alter'], input['null_param'], input['alter_param']
-        if self.ht_mode in ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']:
-            null_model = eval('models.{}(null_param).to(cfg["device"])'.format(cfg['model_name']))
-            if self.ht_mode[1] == 'e':
+        if self.ht_mode[0] in ['lrt', 'hst']:
+            null_model = eval('model.{}(null_param).to(cfg["device"])'.format(cfg['model_name']))
+            if num_samples_emp is not None:
                 null_model_emp = eval('model.{}(copy.deepcopy(null_model.params)).to(cfg["device"])'.format(
                     cfg['model_name']))
                 alter_model = eval('model.{}(copy.deepcopy(null_model.params)).to(cfg["device"])'.format(
@@ -43,12 +44,12 @@ class HypothesisTest:
                 alter_model.fit(alter[:num_samples_emp])
                 null_model = null_model_emp
             else:
-                alter_model = eval('models.{}(alter_param).to(cfg["device"])'.format(cfg['model_name']))
+                alter_model = eval('model.{}(alter_param).to(cfg["device"])'.format(cfg['model_name']))
             threshold = self.make_threshold(null, alter, null_model, alter_model)
             if self.ht_mode[1] == 'e':
                 with torch.no_grad():
-                    data = torch.cat([null_samples, alter_samples], dim=0)
-                    target = torch.cat([torch.zeros(null_samples.size(0)), torch.ones(alter_samples.size(0))], dim=0)
+                    data = torch.cat([null, alter], dim=0)
+                    target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
                     score = self.ht.score(data, null_model, alter_model)
                     fpr, fnr = compute_fpr_tpr_empirical(target, score, threshold)
             elif self.ht_mode[1] == 't':
@@ -88,7 +89,7 @@ def compute_fpr_tpr_empirical(y_true, y_score, threshold):
     FPR = FP / (FP + TN)
     FNR = FN / (TP + FN)
 
-    return FPR.numpy(), FNR.numpy()
+    return FPR.cpu().numpy(), FNR.cpu().numpy()
 
 
 def make_ht(ht_mode):

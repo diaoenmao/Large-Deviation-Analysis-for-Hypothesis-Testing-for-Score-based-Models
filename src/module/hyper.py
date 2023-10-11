@@ -11,7 +11,7 @@ def process_control():
     if 'num_samples_emp' in cfg['control']:
         cfg['num_samples_emp'] = int(cfg['control']['num_samples_emp'])
     else:
-        cfg['num_samples_emp'] = 'none'
+        cfg['num_samples_emp'] = None
     cfg['num_trials'] = 10
     cfg['num_samples'] = 10000
     if cfg['data_name'] in ['KDDCUP99']:

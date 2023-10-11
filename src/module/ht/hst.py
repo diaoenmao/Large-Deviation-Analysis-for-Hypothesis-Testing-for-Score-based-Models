@@ -2,7 +2,6 @@ import copy
 import numpy as np
 import torch
 import model
-from scipy.stats import chi2
 from config import cfg
 
 
