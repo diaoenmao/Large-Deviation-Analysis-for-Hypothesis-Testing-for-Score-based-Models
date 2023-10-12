@@ -14,7 +14,7 @@ class MVN(Dataset):
         self.num_trials = params['num_trials']
         self.num_samples = params['num_samples']
         self.mean = params['mean']
-        self.logvar = params['logvar']
+        self.var = params['var']
         self.ptb_mean = params['ptb_mean']
         self.ptb_logvar = params['ptb_logvar']
         self.footprint = make_footprint(params)

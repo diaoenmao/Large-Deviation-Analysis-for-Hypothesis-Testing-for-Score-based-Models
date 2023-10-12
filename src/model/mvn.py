@@ -63,7 +63,11 @@ class MVN(nn.Module):
         with torch.no_grad():
             mean = x.mean(dim=0)
             centered_x = x - mean
-            logvar = (centered_x.t().matmul(centered_x) / centered_x.size(0)).log()
+            cov = centered_x.t().matmul(centered_x) / centered_x.size(0)
+            epsilon = 1e-6
+            cov += epsilon * torch.eye(centered_x.size(-1), device=x.device)
+            logvar = torch.log(cov)
+            print(cov)
             if self.d == 1:
                 logvar = logvar.view(-1)
             self.reset(mean, logvar)

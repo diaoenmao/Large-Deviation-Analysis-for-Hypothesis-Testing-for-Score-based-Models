@@ -39,7 +39,7 @@ def runExperiment():
     dataset = make_dataset(cfg['data_name'], params)
     dataset = process_dataset(dataset)
     data_loader = make_data_loader(dataset, cfg['model_name'])
-    ht = make_ht(cfg['ht_mode'])
+    ht = make_ht(cfg['ht_mode'], cfg['num_samples_emp'])
     metric = make_metric({'test': ['AUROC']})
     logger = make_logger(os.path.join('output', 'runs', 'test_{}'.format(cfg['model_tag'])))
     test(data_loader['test'], ht, metric, logger)

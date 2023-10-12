@@ -28,7 +28,7 @@ def process_control():
         h = torch.randn(dim_h, generator=generator)
         cfg['rbm'] = {'W': W, 'v': v, 'h': h, 'num_iters': int(1)}
     else:
-        cfg['mvn'] = {'mean': torch.tensor([0., 0.]), 'logvar': torch.tensor([[0., -0.3], [-0.3, 0.]])}
+        cfg['mvn'] = {'mean': torch.tensor([0., 0.]), 'var': torch.tensor([[1., 0.7], [0.7, 1.]])}
         dim_v = 50
         dim_h = 40
         generator = torch.Generator()

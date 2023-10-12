@@ -114,7 +114,7 @@ def main():
             ptb_mean = float(1)
             ptb_logvar = float(0)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name = [[[data], test_mode, ptb, data_size]]
+            control_name = [[[data], [model], test_mode, ptb, data_size]]
             controls_mean = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                           control_name)
             ptb_mean = float(0)
@@ -130,7 +130,7 @@ def main():
             data_size = [str(int(x)) for x in data_size]
             ptb_W = float(0.03)
             ptb = ['{}'.format(ptb_W)]
-            control_name = [[[data], test_mode, ptb, data_size]]
+            control_name = [[[data], [model], test_mode, ptb, data_size]]
             controls_W = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                        control_name)
             controls = controls_W
@@ -140,7 +140,7 @@ def main():
             data_size = [str(int(x)) for x in data_size]
             ptb_tau = float(1)
             ptb = ['{}'.format(ptb_tau)]
-            control_name = [[[data], test_mode, ptb, data_size]]
+            control_name = [[[data], [model], test_mode, ptb, data_size]]
             controls_tau = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                          control_name)
             controls = controls_tau
