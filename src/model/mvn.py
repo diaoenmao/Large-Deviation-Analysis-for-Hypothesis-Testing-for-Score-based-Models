@@ -8,19 +8,19 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 class MVN(nn.Module):
-    def __init__(self, mean, logvar):
+    def __init__(self, mean, var):
         super().__init__()
-        self.reset(mean, logvar)
+        self.reset(mean, var)
 
-    def reset(self, mean, logvar):
+    def reset(self, mean, var):
         self.mean = nn.Parameter(mean)
-        self.logvar = nn.Parameter(logvar)
-        self.params = {'mean': mean, 'logvar': logvar}
+        self.var = nn.Parameter(var)
+        self.params = {'mean': mean, 'var': var}
         self.d = self.mean.size(-1)
         if self.d == 1:
-            self.model = Normal(mean, logvar.exp().sqrt())
+            self.model = Normal(mean, var.sqrt())
         else:
-            self.model = MultivariateNormal(mean, logvar.exp())
+            self.model = MultivariateNormal(mean, var)
         return
 
     def pdf(self, x):
@@ -40,19 +40,19 @@ class MVN(nn.Module):
 
     def score(self, x):
         if self.d == 1:
-            score_ = -1 * torch.matmul((x - self.mean), self.logvar.exp() ** (-1)).view(-1, 1)
+            score_ = -1 * torch.matmul((x - self.mean), self.var ** (-1)).view(-1, 1)
         else:
-            score_ = -1 * torch.matmul((x - self.mean), torch.linalg.inv(self.logvar.exp()))
+            score_ = -1 * torch.matmul((x - self.mean), torch.linalg.inv(self.var))
         return score_
 
     def hscore(self, x):
         mean = self.mean
         if self.d == 1:
-            invcov = self.logvar.exp() ** (-1)
+            invcov = self.var ** (-1)
             t1 = 0.5 * ((x - mean) * invcov * invcov).matmul((x - mean).transpose(-1, -2))
             t2 = - invcov
         else:
-            invcov = torch.linalg.inv(self.logvar.exp())
+            invcov = torch.linalg.inv(self.var)
             t1 = 0.5 * (x - mean).matmul(invcov).matmul(invcov).matmul((x - mean).transpose(-1, -2))
             t2 = - invcov.diagonal().sum()
         t1 = t1.diagonal(dim1=-2, dim2=-1)
@@ -63,19 +63,17 @@ class MVN(nn.Module):
         with torch.no_grad():
             mean = x.mean(dim=0)
             centered_x = x - mean
-            cov = centered_x.t().matmul(centered_x) / centered_x.size(0)
+            var = centered_x.t().matmul(centered_x) / centered_x.size(0)
             epsilon = 1e-6
-            cov += epsilon * torch.eye(centered_x.size(-1), device=x.device)
-            logvar = torch.log(cov)
-            print(cov)
+            var += epsilon * torch.eye(centered_x.size(-1), device=x.device)
             if self.d == 1:
-                logvar = logvar.view(-1)
-            self.reset(mean, logvar)
+                var = var.view(-1)
+            self.reset(mean, var)
         return
 
 
 def mvn(params):
     mean = params['mean']
-    logvar = params['logvar']
-    model = MVN(mean, logvar)
+    var = params['var']
+    model = MVN(mean, var)
     return model

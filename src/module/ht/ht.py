@@ -1,6 +1,6 @@
 import copy
 import torch
-import math
+import numpy as np
 import model
 from config import cfg
 from .lrt import LRT
@@ -36,19 +36,20 @@ class HypothesisTest:
                 _, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
                 threshold = torch.tensor(threshold, device=data.device)
             else:
-                null_split = null.split(null, cfg['num_samples_emp'], dim=0)
-                alter_split = alter.split(alter, cfg['num_samples_emp'], dim=0)
+                data = torch.cat([null, alter], dim=0)
+                target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
+                idx = np.linspace(0, 1, 5000)
+                threshold = []
                 for i in range(len(alter_model)):
-                    data_i = torch.cat([null_split[i], alter_split[i]], dim=0)
-                    target_i = torch.cat([torch.zeros(null_split[i].size(0)), torch.ones(alter_split[i].size(0))], dim=0).to(data_i.device)
-                    score_i = self.ht.score(data_i, null_model, alter_model[i])
+                    score_i = self.ht.score(data, null_model, alter_model[i])
                     mask = torch.isfinite(score_i)
                     score_i = score_i[mask]
-                    target_i = target_i[mask]
-                    _, _, threshold = roc_curve(target_i.cpu().numpy(), score_i.cpu().numpy())
-                    threshold_i = torch.tensor(threshold, device=data_split_i.device)
-                    print(len(threshold_i))
-            exit()
+                    target_i = target[mask]
+                    fpr_i, _, threshold_i = roc_curve(target_i.cpu().numpy(), score_i.cpu().numpy(), drop_intermediate=False)
+                    threshold_i = np.interp(idx, fpr_i, threshold_i)
+                    threshold_i = torch.tensor(threshold_i, device=data.device)
+                    threshold.append(threshold_i)
+                threshold = torch.stack(threshold, dim=0).mean(dim=0)
         return threshold
 
     def test(self, input):
@@ -56,14 +57,14 @@ class HypothesisTest:
         if self.ht_mode[0] in ['lrt', 'hst']:
             null_model = eval('model.{}(null_param).to(cfg["device"])'.format(cfg['model_name']))
             if self.num_samples_emp is not None:
-                alter_mode = []
+                alter_model = []
                 alter_split = torch.split(alter, self.num_samples_emp, dim=0)
-                for i in range(math.ceil(alter.size(0) // self.num_samples_emp)):
+                num_tests = 100
+                for i in range(num_tests):
                     alter_model_i = eval('model.{}(copy.deepcopy(null_model.params)).to(cfg["device"])'.format(
                         cfg['model_name']))
-                    print(alter_split[i].shape)
                     alter_model_i.fit(alter_split[i])
-                    alter_mode.append(alter_model_i)
+                    alter_model.append(alter_model_i)
             else:
                 alter_model = eval('model.{}(alter_param).to(cfg["device"])'.format(cfg['model_name']))
             threshold = self.make_threshold(null, alter, null_model, alter_model)
@@ -71,8 +72,18 @@ class HypothesisTest:
                 with torch.no_grad():
                     data = torch.cat([null, alter], dim=0)
                     target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
-                    score = self.ht.score(data, null_model, alter_model)
-                    fpr, fnr = compute_fpr_tpr_empirical(target, score, threshold)
+                    if not isinstance(alter_model, list):
+                        score = self.ht.score(data, null_model, alter_model)
+                        fpr, fnr = compute_fpr_tpr_empirical(target, score, threshold)
+                    else:
+                        fpr, fnr = [], []
+                        for i in range(len(alter_model)):
+                            score = self.ht.score(data, null_model, alter_model[i])
+                            fpr_i, fnr_i = compute_fpr_tpr_empirical(target, score, threshold)
+                            fpr.append(fpr_i)
+                            fnr.append(fnr_i)
+                        fpr = np.stack(fpr, axis=0).mean(axis=0)
+                        fnr = np.stack(fnr, axis=0).mean(axis=0)
             elif self.ht_mode[1] == 't':
                 fpr, fnr = self.ht.compute_fpr_tpr_theoretical(null, alter, null_model, alter_model, threshold)
             else:

@@ -28,13 +28,13 @@ if __name__ == "__main__":
         data_name = data_names[m]
         if data_name == 'MVN':
             mean = cfg['mvn']['mean']
-            logvar = cfg['mvn']['logvar']
+            var = cfg['mvn']['var']
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
             for i in range(len(ptb_mean)):
                 ptb_mean_i = float(ptb_mean[i])
                 ptb_logvar = float(0)
-                params_i = {'num_trials': num_trials, 'num_samples': num_samples, 'mean': mean, 'logvar': logvar,
+                params_i = {'num_trials': num_trials, 'num_samples': num_samples, 'mean': mean, 'var': var,
                             'ptb_mean': ptb_mean_i, 'ptb_logvar': ptb_logvar}
                 dataset = make_dataset(data_name, params_i)
                 footprint = make_footprint(params_i)
@@ -44,7 +44,7 @@ if __name__ == "__main__":
             for i in range(len(ptb_logvar)):
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_mean = float(0)
-                params_i = {'num_trials': num_trials, 'num_samples': num_samples, 'mean': mean, 'logvar': logvar,
+                params_i = {'num_trials': num_trials, 'num_samples': num_samples, 'mean': mean, 'var': var,
                             'ptb_mean': ptb_mean, 'ptb_logvar': ptb_logvar_i}
                 dataset = make_dataset(data_name, params_i)
                 footprint = make_footprint(params_i)

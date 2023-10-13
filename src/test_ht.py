@@ -51,10 +51,10 @@ def runExperiment():
 def make_params(data_name):
     if data_name == 'MVN':
         mean = cfg['mvn']['mean']
-        logvar = cfg['mvn']['logvar']
+        var = cfg['mvn']['var']
         ptb_mean, ptb_logvar = cfg['ptb'].split('-')
         ptb_mean, ptb_logvar = float(ptb_mean), float(ptb_logvar)
-        params = {'num_trials': cfg['num_trials'], 'num_samples': cfg['num_samples'], 'mean': mean, 'logvar': logvar,
+        params = {'num_trials': cfg['num_trials'], 'num_samples': cfg['num_samples'], 'mean': mean, 'var': var,
                   'ptb_mean': ptb_mean, 'ptb_logvar': ptb_logvar}
     elif data_name == 'RBM':
         W = cfg['rbm']['W']

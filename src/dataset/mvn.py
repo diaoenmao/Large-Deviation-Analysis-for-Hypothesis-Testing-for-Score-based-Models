@@ -25,9 +25,9 @@ class MVN(Dataset):
         self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)))
     def __getitem__(self, index):
         null, alter = torch.tensor(self.null[index]), torch.tensor(self.alter[index])
-        null_param = {'mean': self.mean, 'logvar': self.logvar}
+        null_param = {'mean': self.mean, 'var': self.var}
         alter_param = {'mean': torch.tensor(self.meta['mean'][index]),
-                       'logvar': torch.tensor(self.meta['logvar'][index])}
+                       'var': torch.tensor(self.meta['var'][index])}
         input = {'null': null, 'alter': alter, 'null_param': null_param, 'alter_param': alter_param}
         return input
 
@@ -62,33 +62,38 @@ class MVN(Dataset):
         total_samples = self.num_trials * self.num_samples
         d = self.mean.size(-1)
         if d == 1:
-            null_mvn = torch.distributions.normal.Normal(self.mean, self.logvar.exp().sqrt())
+            null_mvn = torch.distributions.normal.Normal(self.mean, self.var.sqrt())
         else:
-            null_mvn = torch.distributions.multivariate_normal.MultivariateNormal(self.mean, self.logvar.exp())
+            null_mvn = torch.distributions.multivariate_normal.MultivariateNormal(self.mean, self.var)
         null = null_mvn.sample((total_samples,))
         null = null.view(self.num_trials, self.num_samples, -1)
         ptb_mean = self.ptb_mean * torch.randn((self.num_trials, *self.mean.size()))
         alter_mean = self.mean + ptb_mean
         if d == 1:
-            ptb_logvar = self.ptb_logvar * torch.randn((self.num_trials, *self.logvar.size()))
-            alter_logvar = self.logvar + ptb_logvar
+            ptb_logvar = self.ptb_logvar * torch.randn((self.num_trials, *self.var.size()))
+            alter_var = (self.var.log() + ptb_logvar).exp()
         else:
-            alter_logvar = []
+            alter_var = []
             for i in range(self.num_trials):
                 pd_flag = False
                 while not pd_flag:
-                    ptb_logvar_i = torch.diag_embed(self.ptb_logvar * torch.randn((1, d)))
-                    alter_logvar_i = self.logvar + ptb_logvar_i
-                    if (torch.linalg.eigvalsh(alter_logvar_i.exp()) > 0).all():
+                    ptb_logvar_i = self.ptb_logvar * torch.randn((d,))
+                    alter_var_i_diag = (torch.diag(self.var).log() + ptb_logvar_i).exp()
+                    alter_var_i = self.var.clone()
+
+                    rows = torch.arange(alter_var_i.size(0))
+                    cols = torch.arange(alter_var_i.size(1))
+                    alter_var_i[rows, cols] = alter_var_i_diag
+                    if (torch.linalg.eigvalsh(alter_var_i) > 0).all():
                         pd_flag = True
-                        alter_logvar.append(alter_logvar_i)
-            alter_logvar = torch.cat(alter_logvar, dim=0)
+                        alter_var.append(alter_var_i)
+            alter_var = torch.stack(alter_var, dim=0)
         if d == 1:
-            alter_mvn = torch.distributions.normal.Normal(alter_mean, alter_logvar.exp().sqrt())
+            alter_mvn = torch.distributions.normal.Normal(alter_mean, alter_var.sqrt())
         else:
-            alter_mvn = torch.distributions.multivariate_normal.MultivariateNormal(alter_mean, alter_logvar.exp())
+            alter_mvn = torch.distributions.multivariate_normal.MultivariateNormal(alter_mean, alter_var)
         alter = alter_mvn.sample((self.num_samples,))
         alter = alter.permute(1, 0, 2)
         null, alter = null.numpy(), alter.numpy()
-        meta = {'mean': alter_mean.numpy(), 'logvar': alter_logvar.numpy()}
+        meta = {'mean': alter_mean.numpy(), 'var': alter_var.numpy()}
         return null, alter, meta
