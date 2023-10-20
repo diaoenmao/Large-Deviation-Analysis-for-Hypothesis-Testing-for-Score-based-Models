@@ -14,6 +14,8 @@ class HypothesisTest:
         self.num_samples_emp = num_samples_emp
         self.ht = self.make_ht()
         self.result = {'threshold': [], 'fpr': [], 'fnr': []}
+        self.num_threshold = 300
+        self.num_test_emp = 10
 
     def make_ht(self):
         if self.ht_mode[0] in ['lrt']:
@@ -33,12 +35,14 @@ class HypothesisTest:
                 mask = torch.isfinite(score)
                 score = score[mask]
                 target = target[mask]
-                _, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
+                fpr, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
+                idx = np.linspace(0, 1, self.num_threshold)
+                threshold = np.interp(idx, fpr, threshold)
                 threshold = torch.tensor(threshold, device=data.device)
             else:
                 data = torch.cat([null, alter], dim=0)
                 target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
-                idx = np.linspace(0, 1, 5000)
+                idx = np.linspace(0, 1, self.num_threshold)
                 threshold = []
                 for i in range(len(alter_model)):
                     score_i = self.ht.score(data, null_model, alter_model[i])
@@ -59,8 +63,7 @@ class HypothesisTest:
         if self.num_samples_emp is not None:
             alter_model = []
             alter_split = torch.split(alter, self.num_samples_emp, dim=0)
-            num_tests = 100
-            for i in range(num_tests):
+            for i in range(self.num_test_emp):
                 alter_model_i = eval('model.{}(copy.deepcopy(null_model.params)).to(cfg["device"])'.format(
                     cfg['model_name']))
                 alter_model_i.fit(alter_split[i])

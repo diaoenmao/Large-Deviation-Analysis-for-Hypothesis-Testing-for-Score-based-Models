@@ -53,7 +53,8 @@ def main():
     if mode == 'ptb':
         script_name = [['{}_ht.py'.format(run)]]
         if data == 'MVN':
-            test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
+            # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
+            test_mode = ['lrt-e', 'hst-t', 'hst-e']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -108,7 +109,8 @@ def main():
     elif mode == 'ds':
         script_name = [['{}_ht.py'.format(run)]]
         if data == 'MVN':
-            test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
+            # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
+            test_mode = ['lrt-e', 'hst-t', 'hst-e']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_mean = float(1)

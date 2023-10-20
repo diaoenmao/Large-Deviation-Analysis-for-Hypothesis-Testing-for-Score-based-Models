@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import model
 from config import cfg
+from tqdm import tqdm
 
 
 def stable_log_mean_exp(v):
@@ -13,6 +14,8 @@ def stable_log_mean_exp(v):
 
 class HST:
     def __init__(self):
+        self.numerical_bound = 500
+        self.optim_iter = 1
         super().__init__()
 
     def compute_fpr_tpr_theoretical(self, null, alter, null_model, alter_model, threshold):
@@ -28,13 +31,13 @@ class HST:
 
         def fpr_closure():
             fpr_optimizer.zero_grad()
-            loss = fpr_objective(log_fpr_theta_i.exp(), threshold_i)
+            loss = fpr_objective(logit_fpr_theta_i.sigmoid() * self.numerical_bound, threshold_i)
             loss.backward()
             return loss
 
         def fnr_closure():
             fnr_optimizer.zero_grad()
-            loss = fnr_objective(log_fnr_theta_i.exp(), threshold_i)
+            loss = fnr_objective(logit_fnr_theta_i.sigmoid() * self.numerical_bound, threshold_i)
             loss.backward()
             return loss
 
@@ -47,23 +50,24 @@ class HST:
             [nn.Parameter(torch.zeros(1, device=null.device)) for _ in range(len(threshold))])
         for i in range(len(threshold)):
             threshold_i = threshold[i]
-            log_fpr_theta_i = fpr_log_theta[i]
-            log_fnr_theta_i = fnr_log_theta[i]
-            fpr_optimizer = torch.optim.Adam([log_fpr_theta_i], lr=1)
-            fnr_optimizer = torch.optim.Adam([log_fnr_theta_i], lr=1)
-            for _ in range(10):
+            logit_fpr_theta_i = fpr_log_theta[i]
+            logit_fnr_theta_i = fnr_log_theta[i]
+            fpr_optimizer = torch.optim.LBFGS([logit_fpr_theta_i], lr=1)
+            fnr_optimizer = torch.optim.LBFGS([logit_fnr_theta_i], lr=1)
+            for _ in range(self.optim_iter):
                 fpr_optimizer.step(fpr_closure)
                 fnr_optimizer.step(fnr_closure)
-            fpr_i = (fpr_objective(log_fpr_theta_i.exp(), threshold_i)).exp().item()
-            fnr_i = (fnr_objective(log_fnr_theta_i.exp(), threshold_i)).exp().item()
-            print(log_fpr_theta_i.exp(), log_fnr_theta_i.exp(), fpr_i, fnr_i)
-            fpr.append(fpr_i)
-            fnr.append(fnr_i)
-        print(fpr)
-        print(fnr)
-        exit()
-
-        return
+            fpr_i = fpr_objective(logit_fpr_theta_i.sigmoid() * self.numerical_bound, threshold_i).exp()
+            fnr_i = fnr_objective(logit_fnr_theta_i.sigmoid() * self.numerical_bound, threshold_i).exp()
+            fpr_i = torch.clamp(fpr_i, 0, 1)
+            fnr_i = torch.clamp(fnr_i, 0, 1)
+            # print('fpr', logit_fpr_theta_i.data.sigmoid() * self.numerical_bound, fpr_i)
+            # print('fnr', logit_fnr_theta_i.data.sigmoid() * self.numerical_bound, fnr_i)
+            fpr.append(fpr_i.item())
+            fnr.append(fnr_i.item())
+        fpr = np.array(fpr)
+        fnr = np.array(fnr)
+        return fpr, fnr
 
     def score(self, data, null_model, alter_model):
         """Calculate Hyvarinen Score Difference"""
