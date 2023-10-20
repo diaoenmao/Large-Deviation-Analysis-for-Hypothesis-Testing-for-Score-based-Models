@@ -104,6 +104,7 @@ class HypothesisTest:
                 raise ValueError('Not valid ht mode')
         else:
             raise ValueError('Not valid ht mode')
+        threshold = threshold.cpu().numpy()
         output = {'threshold': threshold, 'fpr': fpr, 'fnr': fnr}
         return output
 

@@ -15,7 +15,7 @@ def stable_log_mean_exp(v):
 class HST:
     def __init__(self):
         self.numerical_bound = 500
-        self.optim_iter = 1
+        self.optim_iter = 10
         super().__init__()
 
     def compute_fpr_tpr_theoretical(self, null, alter, null_model, alter_model, threshold):
