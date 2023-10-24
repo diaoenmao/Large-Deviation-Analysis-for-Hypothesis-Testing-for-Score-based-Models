@@ -47,5 +47,5 @@ def process_control():
     cfg[model_name]['momentum'] = 0.9
     cfg[model_name]['nesterov'] = True
     cfg[model_name]['weight_decay'] = 0
-    cfg[model_name]['num_iters'] = 20
+    cfg[model_name]['num_epochs'] = 20
     return

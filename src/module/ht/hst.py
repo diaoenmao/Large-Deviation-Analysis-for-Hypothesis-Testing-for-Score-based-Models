@@ -59,8 +59,6 @@ class HST:
                 fnr_optimizer.step(fnr_closure)
             fpr_i = fpr_objective(logit_fpr_theta_i.sigmoid() * self.numerical_bound, threshold_i).exp()
             fnr_i = fnr_objective(logit_fnr_theta_i.sigmoid() * self.numerical_bound, threshold_i).exp()
-            fpr_i = torch.clamp(fpr_i, 0, 1)
-            fnr_i = torch.clamp(fnr_i, 0, 1)
             # print('fpr', logit_fpr_theta_i.data.sigmoid() * self.numerical_bound, fpr_i)
             # print('fnr', logit_fnr_theta_i.data.sigmoid() * self.numerical_bound, fnr_i)
             fpr.append(fpr_i.item())
