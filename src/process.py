@@ -7,6 +7,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from module import save, load, makedir_exist_ok
 from collections import defaultdict
+from scipy.integrate import quad
 
 result_path = os.path.join('output', 'result')
 save_format = 'png'
@@ -22,7 +23,6 @@ matplotlib.rcParams['axes.titleweight'] = 'bold'
 matplotlib.rcParams['axes.linewidth'] = 1.5
 matplotlib.rcParams['xtick.labelsize'] = 'large'
 matplotlib.rcParams['ytick.labelsize'] = 'large'
-write = False
 
 num_trials = 10
 
@@ -75,7 +75,7 @@ def make_control_list(mode, data, model):
             controls_W = make_control(control_name)
             controls = controls_W
         elif data == 'EXP':
-            test_mode = ['hst-t', 'hst-e']
+            test_mode = ['lrt-e', 'hst-t', 'hst-e']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
@@ -132,9 +132,8 @@ def make_control_list(mode, data, model):
 
 def main():
     # mode = ['ptb', 'ds']
-    # data_name = ['MVN', 'RBM', 'EXP']
+    data_name = ['MVN', 'RBM', 'EXP']
     mode = ['ptb']
-    data_name = ['MVN']
     controls = []
     for i in range(len(mode)):
         mode_i = mode[i]
@@ -144,9 +143,11 @@ def main():
             control_list = make_control_list(mode_i, data_j, model_j)
             controls = controls + control_list
     processed_result = process_result(controls)
-    df_history = make_df(processed_result, 'history')
-    make_vis_threshold(df_history)
+    df_mean = make_df(processed_result, 'mean', True)
+    df_history = make_df(processed_result, 'history', False)
+    # make_vis_threshold(df_history)
     make_vis_roc(df_history)
+    exit()
     return
 
 
@@ -160,7 +161,6 @@ def process_result(controls):
         model_tag = '_'.join(control)
         gather_result(list(control), model_tag, result)
     summarize_result(None, result)
-    save(result, os.path.join(result_path, 'processed_result'))
     processed_result = tree()
     extract_result(processed_result, result, [])
     return processed_result
@@ -172,18 +172,36 @@ def gather_result(control, model_tag, processed_result):
         base_result_path_i = os.path.join(result_path, '{}'.format(model_tag))
         if os.path.exists(base_result_path_i):
             base_result = load(base_result_path_i)
-            for metric_name in base_result['logger_state_dict']['history']:
-                processed_result[metric_name]['history'][exp_idx] = base_result['logger_state_dict']['history'][
-                    metric_name]
             for metric_name in base_result['ht_state_dict']:
-                if metric_name == 'threshold':
-                    metric_name_ = 'test/{}'.format(metric_name)
-                    processed_result[metric_name_]['history'][exp_idx] = torch.stack(
-                        base_result['ht_state_dict'][metric_name], dim=0).cpu().numpy().reshape(-1).tolist()
-                else:
-                    metric_name_ = 'test/{}'.format(metric_name)
-                    processed_result[metric_name_]['history'][exp_idx] = np.stack(
-                        base_result['ht_state_dict'][metric_name], axis=0).reshape(-1).tolist()
+                metric_name_ = 'test/{}'.format(metric_name)
+                processed_result[metric_name_]['history'][exp_idx] = np.stack(
+                    base_result['ht_state_dict'][metric_name], axis=0)
+            for i in range(num_trials):
+                threshold_i = processed_result['test/threshold']['history'][exp_idx][i]
+                fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
+                fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
+                sorted_indices = np.argsort(threshold_i)
+                threshold_i = threshold_i[sorted_indices]
+                fpr_i = fpr_i[sorted_indices]
+                fnr_i = fnr_i[sorted_indices]
+                valid_mask_fpr_i = np.logical_and(fpr_i >= -1e-5, fpr_i <= 1 + 1e-5)
+                valid_mask_fnr_i = np.logical_and(fnr_i >= -1e-5, fnr_i <= 1 + 1e-5)
+                fpr_i = np.interp(threshold_i, threshold_i[valid_mask_fpr_i], fpr_i[valid_mask_fpr_i])
+                fnr_i = np.interp(threshold_i, threshold_i[valid_mask_fnr_i], fnr_i[valid_mask_fnr_i])
+                processed_result['test/threshold']['history'][exp_idx][i] = threshold_i
+                processed_result['test/fpr']['history'][exp_idx][i] = fpr_i
+                processed_result['test/fnr']['history'][exp_idx][i] = fnr_i
+            for i in range(num_trials):
+                fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
+                fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
+                sorted_indices = np.argsort(fpr_i)
+                fpr_i = fpr_i[sorted_indices]
+                fnr_i = fnr_i[sorted_indices]
+                auroc_i, _ = quad(lambda x: np.interp(x, fpr_i, 1 - fnr_i), 0, 1)
+                processed_result['test/AUROC']['mean'][i] = auroc_i
+            for metric_name in ['test/threshold', 'test/fpr', 'test/fnr']:
+                processed_result[metric_name]['history'][exp_idx] = (
+                    processed_result[metric_name]['history'][exp_idx].reshape(-1).tolist())
         else:
             print('Missing {}'.format(base_result_path_i))
     else:
@@ -211,7 +229,10 @@ def summarize_result(key, value):
 def extract_result(extracted_processed_result, processed_result, control):
     def extract(metric_name, mode):
         output = False
-        if metric_name in ['test/AUROC', 'test/threshold', 'test/fpr', 'test/fnr']:
+        if metric_name in ['test/AUROC']:
+            if mode == 'mean':
+                output = True
+        if metric_name in ['test/threshold', 'test/fpr', 'test/fnr']:
             if mode == 'history':
                 output = True
         return output
@@ -230,7 +251,7 @@ def extract_result(extracted_processed_result, processed_result, control):
     return
 
 
-def make_df(processed_result, mode):
+def make_df(processed_result, mode, write):
     df = defaultdict(list)
     for exp_name in processed_result[mode]:
         exp_name_list = exp_name.split('_')
@@ -289,10 +310,12 @@ def make_vis_threshold(df_history):
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.legend(fontsize=fontsize_dict['legend'])
     for fig_name in fig:
+        fig_name_list = fig_name.split('_')
+        data_name = fig_name_list[0]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
         dir_name = 'threshold'
-        dir_path = os.path.join(vis_path, dir_name)
+        dir_path = os.path.join(vis_path, dir_name, data_name)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)
         plt.tight_layout()
@@ -342,16 +365,19 @@ def make_vis_roc(df_history):
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.legend(loc=loc_dict[metric_name], fontsize=fontsize_dict['legend'])
     for fig_name in fig:
+        fig_name_list = fig_name.split('_')
+        data_name = fig_name_list[0]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
         dir_name = 'roc'
-        dir_path = os.path.join(vis_path, dir_name)
+        dir_path = os.path.join(vis_path, dir_name, data_name)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)
         plt.tight_layout()
         plt.savefig(fig_path, dpi=dpi, bbox_inches='tight', pad_inches=0.03)
         plt.close(fig_name)
     return
+
 
 if __name__ == '__main__':
     main()
