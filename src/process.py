@@ -25,6 +25,7 @@ matplotlib.rcParams['xtick.labelsize'] = 'large'
 matplotlib.rcParams['ytick.labelsize'] = 'large'
 
 num_trials = 10
+num_threshold = 300
 
 
 def make_control(control_name):
@@ -41,6 +42,7 @@ def make_control_list(mode, data, model):
         if data == 'MVN':
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
+            # test_mode = ['hst-t']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -145,9 +147,8 @@ def main():
     processed_result = process_result(controls)
     df_mean = make_df(processed_result, 'mean', True)
     df_history = make_df(processed_result, 'history', False)
-    # make_vis_threshold(df_history)
+    make_vis_threshold(df_history)
     make_vis_roc(df_history)
-    exit()
     return
 
 
@@ -186,12 +187,14 @@ def gather_result(control, model_tag, processed_result):
                 fnr_i = fnr_i[sorted_indices]
                 valid_mask_fpr_i = np.logical_and(fpr_i >= -1e-5, fpr_i <= 1 + 1e-5)
                 valid_mask_fnr_i = np.logical_and(fnr_i >= -1e-5, fnr_i <= 1 + 1e-5)
+                if valid_mask_fpr_i.sum() < len(fpr_i) * 0.8 or valid_mask_fnr_i.sum() < len(fnr_i) * 0.8:
+                    break
                 fpr_i = np.interp(threshold_i, threshold_i[valid_mask_fpr_i], fpr_i[valid_mask_fpr_i])
                 fnr_i = np.interp(threshold_i, threshold_i[valid_mask_fnr_i], fnr_i[valid_mask_fnr_i])
                 processed_result['test/threshold']['history'][exp_idx][i] = threshold_i
                 processed_result['test/fpr']['history'][exp_idx][i] = fpr_i
                 processed_result['test/fnr']['history'][exp_idx][i] = fnr_i
-            for i in range(num_trials):
+            for i in range(len(processed_result['test/fpr']['history'][exp_idx])):
                 fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
                 fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
                 sorted_indices = np.argsort(fpr_i)
@@ -293,12 +296,12 @@ def make_vis_threshold(df_history):
                 ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
             ax_1 = ax_dict_1[fig_name]
             x = df_history[df_name_threshold].iloc[0].to_numpy()
-            x = x.reshape(num_trials, -1)
+            x = x.reshape(-1, num_threshold)
             x = x.mean(axis=0)
             y = df_history[df_name].iloc[0].to_numpy()
-            y = y.reshape(num_trials, -1)
+            y = y.reshape(-1, num_threshold)
             y_mean = y.mean(axis=0)
-            y_std = y.std(axis=0) / np.sqrt(num_trials)
+            y_std = y.std(axis=0) / np.sqrt(y.shape[0])
             xlabel = 'Threshold'
             ylabel = metric_name.upper()
             ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
@@ -348,12 +351,12 @@ def make_vis_roc(df_history):
                 ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
             ax_1 = ax_dict_1[fig_name]
             x = df_history[df_name].iloc[0].to_numpy()
-            x = x.reshape(num_trials, -1)
+            x = x.reshape(-1, num_threshold)
             x = x.mean(axis=0)
             y = 1 - df_history[df_name_fnr].iloc[0].to_numpy()
-            y = y.reshape(num_trials, -1)
+            y = y.reshape(-1, num_threshold)
             y_mean = y.mean(axis=0)
-            y_std = y.std(axis=0) / np.sqrt(num_trials)
+            y_std = y.std(axis=0) / np.sqrt(y.shape[0])
             xlabel = 'FPR'
             ylabel = 'TPR'
             ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],

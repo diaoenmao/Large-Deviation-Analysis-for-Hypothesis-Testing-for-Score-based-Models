@@ -14,13 +14,19 @@ class HST:
 
     def compute_fpr_tpr_theoretical(self, null, alter, null_model, alter_model, threshold):
         def fpr_objective(theta, T):
-            exponent = theta * (self.score(null, null_model, alter_model) / 2)
-            obj = exponent.exp().mean() * torch.exp(-theta * T)
+            theta.data.clamp_(min=0)
+            exponent = theta * (self.score(null, null_model, alter_model) / 2 - T)
+            element_exp = exponent.exp().clamp(max=torch.finfo(exponent.dtype).max)
+            obj = element_exp.mean()
+            obj.data.clamp(min=0, max=1)
             return obj
 
         def fnr_objective(theta, T):
-            exponent = theta * (-self.score(alter, null_model, alter_model) / 2)
-            obj = exponent.exp().mean() * torch.exp(theta * T)
+            theta.data.clamp_(min=0)
+            exponent = theta * (-self.score(alter, null_model, alter_model) / 2 + T)
+            element_exp = exponent.exp().clamp(max=torch.finfo(exponent.dtype).max)
+            obj = element_exp.mean()
+            obj.data.clamp(min=0, max=1)
             return obj
 
         def fpr_closure():
@@ -55,8 +61,8 @@ class HST:
                 fnr_optimizer.step(fnr_closure)
             fpr_i = fpr_objective(fpr_theta_i, threshold_i)
             fnr_i = fnr_objective(fnr_theta_i, threshold_i)
-            # print('fpr', fpr_theta_i.data, fpr_i)
-            # print('fnr', fnr_theta_i.data, fnr_i)
+            # print(i, 'fpr', fpr_theta_i.data, fpr_i)
+            # print(i, 'fnr', fnr_theta_i.data, fnr_i)
             fpr.append(fpr_i.item())
             fnr.append(fnr_i.item())
         fpr = np.array(fpr)
