@@ -78,6 +78,7 @@ def make_control_list(mode, data, model):
             controls = controls_W
         elif data == 'EXP':
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
+            # test_mode = ['hst-t']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
@@ -135,6 +136,7 @@ def make_control_list(mode, data, model):
 def main():
     # mode = ['ptb', 'ds']
     data_name = ['MVN', 'RBM', 'EXP']
+    # data_name = ['EXP']
     mode = ['ptb']
     controls = []
     for i in range(len(mode)):
@@ -181,16 +183,18 @@ def gather_result(control, model_tag, processed_result):
                 threshold_i = processed_result['test/threshold']['history'][exp_idx][i]
                 fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
                 fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
-                sorted_indices = np.argsort(threshold_i)
-                threshold_i = threshold_i[sorted_indices]
-                fpr_i = fpr_i[sorted_indices]
-                fnr_i = fnr_i[sorted_indices]
-                valid_mask_fpr_i = np.logical_and(fpr_i >= -1e-5, fpr_i <= 1 + 1e-5)
-                valid_mask_fnr_i = np.logical_and(fnr_i >= -1e-5, fnr_i <= 1 + 1e-5)
-                if valid_mask_fpr_i.sum() < len(fpr_i) * 0.8 or valid_mask_fnr_i.sum() < len(fnr_i) * 0.8:
-                    break
-                fpr_i = np.interp(threshold_i, threshold_i[valid_mask_fpr_i], fpr_i[valid_mask_fpr_i])
-                fnr_i = np.interp(threshold_i, threshold_i[valid_mask_fnr_i], fnr_i[valid_mask_fnr_i])
+                # print(fpr_i)
+                # print(fnr_i)
+                # sorted_indices = np.argsort(threshold_i)
+                # threshold_i = threshold_i[sorted_indices]
+                # fpr_i = fpr_i[sorted_indices]
+                # fnr_i = fnr_i[sorted_indices]
+                # valid_mask_fpr_i = np.logical_and(fpr_i >= -1e-5, fpr_i <= 1 + 1e-5)
+                # valid_mask_fnr_i = np.logical_and(fnr_i >= -1e-5, fnr_i <= 1 + 1e-5)
+                # if valid_mask_fpr_i.sum() < len(fpr_i) * 0.8 or valid_mask_fnr_i.sum() < len(fnr_i) * 0.8:
+                #     break
+                # fpr_i = np.interp(threshold_i, threshold_i[valid_mask_fpr_i], fpr_i[valid_mask_fpr_i])
+                # fnr_i = np.interp(threshold_i, threshold_i[valid_mask_fnr_i], fnr_i[valid_mask_fnr_i])
                 processed_result['test/threshold']['history'][exp_idx][i] = threshold_i
                 processed_result['test/fpr']['history'][exp_idx][i] = fpr_i
                 processed_result['test/fnr']['history'][exp_idx][i] = fnr_i

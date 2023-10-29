@@ -38,7 +38,7 @@ class HypothesisTest:
                 fpr, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
                 idx = np.linspace(0, 1, self.num_threshold)
                 threshold = np.interp(idx, fpr, threshold)
-                threshold = torch.tensor(threshold, device=data.device)
+                threshold = torch.tensor(threshold, device=data.device, dtype=torch.float32)
             else:
                 data = torch.cat([null, alter], dim=0)
                 target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
@@ -52,7 +52,7 @@ class HypothesisTest:
                     fpr_i, _, threshold_i = roc_curve(target_i.cpu().numpy(), score_i.cpu().numpy(),
                                                       drop_intermediate=False)
                     threshold_i = np.interp(idx, fpr_i, threshold_i)
-                    threshold_i = torch.tensor(threshold_i, device=data.device)
+                    threshold_i = torch.tensor(threshold_i, device=data.device, dtype=torch.float32)
                     threshold.append(threshold_i)
                 threshold = torch.stack(threshold, dim=0).mean(dim=0)
         return threshold

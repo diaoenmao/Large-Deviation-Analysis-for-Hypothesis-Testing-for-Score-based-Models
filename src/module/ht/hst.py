@@ -16,17 +16,17 @@ class HST:
         def fpr_objective(theta, T):
             theta.data.clamp_(min=0)
             exponent = theta * (self.score(null, null_model, alter_model) / 2 - T)
-            element_exp = exponent.exp().clamp(max=torch.finfo(exponent.dtype).max)
+            element_exp = exponent.exp()
+            element_exp.data.clamp_(min=0, max=1e3)
             obj = element_exp.mean()
-            obj.data.clamp(min=0, max=1)
             return obj
 
         def fnr_objective(theta, T):
             theta.data.clamp_(min=0)
             exponent = theta * (-self.score(alter, null_model, alter_model) / 2 + T)
-            element_exp = exponent.exp().clamp(max=torch.finfo(exponent.dtype).max)
+            element_exp = exponent.exp()
+            element_exp.data.clamp_(min=0, max=1e3)
             obj = element_exp.mean()
-            obj.data.clamp(min=0, max=1)
             return obj
 
         def fpr_closure():
