@@ -17,7 +17,7 @@ class HST:
             theta.data.clamp_(min=0)
             exponent = theta * (self.score(null, null_model, alter_model) / 2 - T)
             element_exp = exponent.exp()
-            element_exp.data.clamp_(min=0, max=1e3)
+            element_exp.data.clamp_(min=0, max=1)
             obj = element_exp.mean()
             return obj
 
@@ -25,7 +25,7 @@ class HST:
             theta.data.clamp_(min=0)
             exponent = theta * (-self.score(alter, null_model, alter_model) / 2 + T)
             element_exp = exponent.exp()
-            element_exp.data.clamp_(min=0, max=1e3)
+            element_exp.data.clamp_(min=0, max=1)
             obj = element_exp.mean()
             return obj
 
