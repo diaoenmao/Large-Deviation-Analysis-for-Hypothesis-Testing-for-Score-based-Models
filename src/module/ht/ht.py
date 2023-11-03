@@ -29,30 +29,36 @@ class HypothesisTest:
     def make_threshold(self, null, alter, null_model, alter_model):
         with torch.no_grad():
             if not isinstance(alter_model, list):
-                data = torch.cat([null, alter], dim=0)
-                target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
-                score = self.ht.score(data, null_model, alter_model)
-                mask = torch.isfinite(score)
-                score = score[mask]
-                target = target[mask]
+                data_size = null.size(0)
+                target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
+                null = bootstrap(null, cfg['num_samples_test'], data_size)
+                alter = bootstrap(alter, cfg['num_samples_test'], data_size)
+                null_score = self.ht.score(null, null_model, alter_model)
+                alter_score = self.ht.score(alter, null_model, alter_model)
+                null_score = null_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                alter_score = alter_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                score = torch.cat([null_score, alter_score], dim=0)
                 fpr, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
                 idx = np.linspace(0, 1, self.num_threshold)
                 threshold = np.interp(idx, fpr, threshold)
-                threshold = torch.tensor(threshold, device=data.device, dtype=torch.float32)
+                threshold = torch.tensor(threshold, device=null.device, dtype=torch.float32)
             else:
-                data = torch.cat([null, alter], dim=0)
-                target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
+                data_size = null.size(0)
+                target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
+                null = bootstrap(null, cfg['num_samples_test'], data_size)
+                alter = bootstrap(alter, cfg['num_samples_test'], data_size)
                 idx = np.linspace(0, 1, self.num_threshold)
                 threshold = []
                 for i in range(len(alter_model)):
-                    score_i = self.ht.score(data, null_model, alter_model[i])
-                    mask = torch.isfinite(score_i)
-                    score_i = score_i[mask]
-                    target_i = target[mask]
-                    fpr_i, _, threshold_i = roc_curve(target_i.cpu().numpy(), score_i.cpu().numpy(),
+                    null_score = self.ht.score(null, null_model, alter_model[i])
+                    alter_score = self.ht.score(alter, null_model, alter_model[i])
+                    null_score = null_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                    alter_score = alter_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                    score = torch.cat([null_score, alter_score], dim=0)
+                    fpr_i, _, threshold_i = roc_curve(target.cpu().numpy(), score.cpu().numpy(),
                                                       drop_intermediate=False)
                     threshold_i = np.interp(idx, fpr_i, threshold_i)
-                    threshold_i = torch.tensor(threshold_i, device=data.device, dtype=torch.float32)
+                    threshold_i = torch.tensor(threshold_i, device=null.device, dtype=torch.float32)
                     threshold.append(threshold_i)
                 threshold = torch.stack(threshold, dim=0).mean(dim=0)
         return threshold
@@ -74,15 +80,25 @@ class HypothesisTest:
         if self.ht_mode[0] in ['lrt', 'hst']:
             if self.ht_mode[1] == 'e':
                 with torch.no_grad():
-                    data = torch.cat([null, alter], dim=0)
-                    target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(data.device)
+                    data_size = null.size(0)
+                    target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
+                    null = bootstrap(null, cfg['num_samples_test'], data_size)
+                    alter = bootstrap(alter, cfg['num_samples_test'], data_size)
                     if not isinstance(alter_model, list):
-                        score = self.ht.score(data, null_model, alter_model)
+                        null_score = self.ht.score(null, null_model, alter_model)
+                        alter_score = self.ht.score(alter, null_model, alter_model)
+                        null_score = null_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                        alter_score = alter_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                        score = torch.cat([null_score, alter_score], dim=0)
                         fpr, fnr = compute_fpr_tpr_empirical(target, score, threshold)
                     else:
                         fpr, fnr = [], []
                         for i in range(len(alter_model)):
-                            score = self.ht.score(data, null_model, alter_model[i])
+                            null_score = self.ht.score(null, null_model, alter_model[i])
+                            alter_score = self.ht.score(alter, null_model, alter_model[i])
+                            null_score = null_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                            alter_score = alter_score.view(cfg['num_samples_test'], data_size).mean(dim=0)
+                            score = torch.cat([null_score, alter_score], dim=0)
                             fpr_i, fnr_i = compute_fpr_tpr_empirical(target, score, threshold)
                             fpr.append(fpr_i)
                             fnr.append(fnr_i)
@@ -137,6 +153,17 @@ def compute_fpr_tpr_empirical(y_true, y_score, threshold):
     FNR = FN / (TP + FN)
 
     return FPR.cpu().numpy(), FNR.cpu().numpy()
+
+
+def bootstrap(data, n, N):
+    # Repeat the tensor n times
+    data = data.repeat(n, 1)
+    # Shuffle the repeated tensor
+    indices = torch.randperm(data.size(0))
+    data = data[indices]
+    # # Reshape to get nxNxD shape
+    # data = data.reshape(n, N, -1)
+    return data
 
 
 def make_ht(ht_mode, num_samples_emp):

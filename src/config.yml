@@ -5,6 +5,7 @@ control:
   model_name: mvn
   ht_mode: hst
   ptb: 0.1-0
+  num_samples_test: 1
   num_samples_emp: 100
 # experiment
 pin_memory: True

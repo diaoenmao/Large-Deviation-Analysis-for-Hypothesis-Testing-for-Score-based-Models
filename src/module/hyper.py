@@ -8,6 +8,7 @@ def process_control():
     cfg['model_name'] = cfg['control']['model_name']
     cfg['ht_mode'] = cfg['control']['ht_mode']
     cfg['ptb'] = cfg['control']['ptb']
+    cfg['num_samples_test'] = int(cfg['control']['num_samples_test'])
     if 'num_samples_emp' in cfg['control']:
         cfg['num_samples_emp'] = int(cfg['control']['num_samples_emp'])
     else:

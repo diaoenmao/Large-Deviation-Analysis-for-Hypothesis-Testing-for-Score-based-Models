@@ -55,6 +55,7 @@ def main():
         if data == 'MVN':
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
+            n = ['1', '5', '10', '50', '100', '1000', '5000', '10000']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -63,7 +64,7 @@ def main():
                 ptb_mean_i = float(ptb_mean[i])
                 ptb_i = '{}-{}'.format(ptb_mean_i, ptb_logvar)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb]]
+            control_name = [[[data], [model], test_mode, ptb, n]]
             controls_mean = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                           control_name)
             ptb = []
@@ -74,7 +75,7 @@ def main():
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_i = '{}-{}'.format(ptb_mean, ptb_logvar_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb]]
+            control_name = [[[data], [model], test_mode, ptb, n]]
             controls_logvar = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                             control_name)
             controls = controls_mean + controls_logvar
