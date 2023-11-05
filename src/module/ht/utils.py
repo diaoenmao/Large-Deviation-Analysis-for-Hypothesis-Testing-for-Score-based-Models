@@ -23,7 +23,8 @@ def compute_fpr_tpr_empirical(y_true, y_score, threshold):
     return FPR.cpu().numpy(), FNR.cpu().numpy()
 
 
-def make_score(data, null_model, alter_model, score_fn, batch_size=100):
+def make_score(data, null_model, alter_model, score_fn):
+    batch_size = 1
     score = []
     for i in range(data.size(0) // batch_size):
         num_samples = cfg['num_samples_test'] * batch_size
