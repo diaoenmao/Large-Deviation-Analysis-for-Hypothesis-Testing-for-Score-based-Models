@@ -5,6 +5,7 @@ import torch.nn as nn
 import model
 from config import cfg
 from tqdm import tqdm
+from .utils import make_score
 
 
 class HST:
@@ -15,7 +16,7 @@ class HST:
     def compute_fpr_tpr_theoretical(self, null, alter, null_model, alter_model, threshold):
         def fpr_objective(theta, T):
             theta.data.clamp_(min=0)
-            exponent = theta * (self.score(null, null_model, alter_model) / 2 - T)
+            exponent = theta * (null_score / 2 - T)
             element_exp = exponent.exp()
             element_exp.data.clamp_(min=0, max=1)
             obj = element_exp.mean()
@@ -23,7 +24,7 @@ class HST:
 
         def fnr_objective(theta, T):
             theta.data.clamp_(min=0)
-            exponent = theta * (-self.score(alter, null_model, alter_model) / 2 + T)
+            exponent = theta * (-alter_score / 2 + T)
             element_exp = exponent.exp()
             element_exp.data.clamp_(min=0, max=1)
             obj = element_exp.mean()
@@ -43,6 +44,8 @@ class HST:
             loss.backward()
             return loss
 
+        null_score = make_score(null, null_model, alter_model, self.score).detach()
+        alter_score = make_score(alter, null_model, alter_model, self.score).detach()
         threshold[threshold == -float('inf')] = 10 * threshold[torch.isfinite(threshold)].min()
         threshold[threshold == float('inf')] = 10 * threshold[torch.isfinite(threshold)].max()
         fpr, fnr = [], []
