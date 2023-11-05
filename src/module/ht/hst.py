@@ -43,9 +43,9 @@ class HST:
             loss = obj
             loss.backward()
             return loss
-
-        null_score = make_score(null, null_model, alter_model, self.score).detach()
-        alter_score = make_score(alter, null_model, alter_model, self.score).detach()
+        with torch.no_grad():
+            null_score = make_score(null, null_model, alter_model, self.score).detach()
+            alter_score = make_score(alter, null_model, alter_model, self.score).detach()
         threshold[threshold == -float('inf')] = 10 * threshold[torch.isfinite(threshold)].min()
         threshold[threshold == float('inf')] = 10 * threshold[torch.isfinite(threshold)].max()
         fpr, fnr = [], []
