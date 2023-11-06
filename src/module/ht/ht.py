@@ -36,7 +36,10 @@ class HypothesisTest:
                 null_score_i = make_score(null, null_model, alter_model[i], self.ht.score)
                 alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score)
                 score_i = torch.cat([null_score_i, alter_score_i], dim=0)
-                fpr_i, _, threshold_i = roc_curve(target.cpu().numpy(), score_i.cpu().numpy())
+                mask_i = torch.isfinite(score_i)
+                score_i = score_i[mask_i]
+                target_i = target[mask_i]
+                fpr_i, _, threshold_i = roc_curve(target_i.cpu().numpy(), score_i.cpu().numpy())
                 threshold_i = np.interp(idx, fpr_i, threshold_i)
                 threshold_i = torch.tensor(threshold_i, device=null.device, dtype=torch.float32)
                 threshold.append(threshold_i)

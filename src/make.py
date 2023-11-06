@@ -55,7 +55,7 @@ def main():
         if data == 'MVN':
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '1000', '5000']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -81,7 +81,7 @@ def main():
             controls = controls_mean + controls_logvar
         elif data == 'RBM':
             test_mode = ['hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '1000', '5000']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             ptb = []
             ptb_W = [0.005, 0.007, 0.009, 0.01, 0.011, 0.012, 0.014, 0.015, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
                      0.04, 0.045, 0.05, 0.075, 0.1]
@@ -95,7 +95,7 @@ def main():
             controls = controls_W
         elif data == 'EXP':
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '1000', '5000']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
@@ -114,7 +114,7 @@ def main():
         if data == 'MVN':
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '1000', '5000']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_mean = float(1)
@@ -132,7 +132,7 @@ def main():
             controls = controls_mean + controls_logvar
         elif data == 'RBM':
             test_mode = ['hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '1000', '5000']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_W = float(0.03)
@@ -143,7 +143,7 @@ def main():
             controls = controls_W
         elif data == 'EXP':
             test_mode = ['hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '1000', '5000']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_tau = float(1)

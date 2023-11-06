@@ -43,6 +43,7 @@ def make_control_list(mode, data, model):
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
             # test_mode = ['hst-t']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -51,7 +52,7 @@ def make_control_list(mode, data, model):
                 ptb_mean_i = float(ptb_mean[i])
                 ptb_i = '{}-{}'.format(ptb_mean_i, ptb_logvar)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb]]
+            control_name = [[[data], [model], test_mode, ptb, n]]
             controls_mean = make_control(control_name)
             ptb = []
             ptb_mean = float(0)
@@ -61,11 +62,12 @@ def make_control_list(mode, data, model):
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_i = '{}-{}'.format(ptb_mean, ptb_logvar_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb]]
+            control_name = [[[data], [model], test_mode, ptb, n]]
             controls_logvar = make_control(control_name)
             controls = controls_mean + controls_logvar
         elif data == 'RBM':
             test_mode = ['hst-t', 'hst-e']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             ptb = []
             ptb_W = [0.005, 0.007, 0.009, 0.01, 0.011, 0.012, 0.014, 0.015, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
                      0.04, 0.045, 0.05, 0.075, 0.1]
@@ -73,12 +75,13 @@ def make_control_list(mode, data, model):
                 ptb_W_i = float(ptb_W[i])
                 ptb_i = '{}'.format(ptb_W_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb]]
+            control_name = [[[data], [model], test_mode, ptb, n]]
             controls_W = make_control(control_name)
             controls = controls_W
         elif data == 'EXP':
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
             # test_mode = ['hst-t']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
@@ -86,7 +89,7 @@ def make_control_list(mode, data, model):
                 ptb_W_i = float(ptb_tau[i])
                 ptb_i = '{}'.format(ptb_W_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb]]
+            control_name = [[[data], [model], test_mode, ptb, n]]
             controls_W = make_control(control_name)
             controls = controls_W
         else:
@@ -95,12 +98,13 @@ def make_control_list(mode, data, model):
         if data == 'MVN':
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_mean = float(1)
             ptb_logvar = float(0)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name = [[[data], [model], test_mode, ptb, data_size]]
+            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
             controls_mean = make_control(control_name)
             ptb_mean = float(0)
             ptb_logvar = float(1)
@@ -110,20 +114,22 @@ def make_control_list(mode, data, model):
             controls = controls_mean + controls_logvar
         elif data == 'RBM':
             test_mode = ['hst-t', 'hst-e']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_W = float(0.03)
             ptb = ['{}'.format(ptb_W)]
-            control_name = [[[data], [model], test_mode, ptb, data_size]]
+            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
             controls_W = make_control(control_name)
             controls = controls_W
         elif data == 'EXP':
             test_mode = ['hst-t', 'hst-e']
+            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_tau = float(1)
             ptb = ['{}'.format(ptb_tau)]
-            control_name = [[[data], [model], test_mode, ptb, data_size]]
+            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
             controls_tau = make_control(control_name)
             controls = controls_tau
         else:
@@ -183,18 +189,6 @@ def gather_result(control, model_tag, processed_result):
                 threshold_i = processed_result['test/threshold']['history'][exp_idx][i]
                 fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
                 fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
-                # print(fpr_i)
-                # print(fnr_i)
-                # sorted_indices = np.argsort(threshold_i)
-                # threshold_i = threshold_i[sorted_indices]
-                # fpr_i = fpr_i[sorted_indices]
-                # fnr_i = fnr_i[sorted_indices]
-                # valid_mask_fpr_i = np.logical_and(fpr_i >= -1e-5, fpr_i <= 1 + 1e-5)
-                # valid_mask_fnr_i = np.logical_and(fnr_i >= -1e-5, fnr_i <= 1 + 1e-5)
-                # if valid_mask_fpr_i.sum() < len(fpr_i) * 0.8 or valid_mask_fnr_i.sum() < len(fnr_i) * 0.8:
-                #     break
-                # fpr_i = np.interp(threshold_i, threshold_i[valid_mask_fpr_i], fpr_i[valid_mask_fpr_i])
-                # fnr_i = np.interp(threshold_i, threshold_i[valid_mask_fnr_i], fnr_i[valid_mask_fnr_i])
                 processed_result['test/threshold']['history'][exp_idx][i] = threshold_i
                 processed_result['test/fpr']['history'][exp_idx][i] = fpr_i
                 processed_result['test/fnr']['history'][exp_idx][i] = fnr_i
@@ -318,11 +312,11 @@ def make_vis_threshold(df_history):
             ax_1.legend(fontsize=fontsize_dict['legend'])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')
-        data_name = fig_name_list[0]
+        data_name, metric_name = fig_name_list[0], fig_name_list[4]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
         dir_name = 'threshold'
-        dir_path = os.path.join(vis_path, dir_name, data_name)
+        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)
         plt.tight_layout()
