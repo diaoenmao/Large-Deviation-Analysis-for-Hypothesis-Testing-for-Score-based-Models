@@ -300,6 +300,10 @@ def make_vis_threshold(df_history):
             y = y.reshape(-1, num_threshold)
             y_mean = y.mean(axis=0)
             y_std = y.std(axis=0) / np.sqrt(y.shape[0])
+            sorted_indices = np.argsort(x)
+            x = x[sorted_indices]
+            y_mean = y_mean[sorted_indices]
+            y_std = y_std[sorted_indices]
             xlabel = 'Threshold'
             ylabel = metric_name.upper()
             ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
@@ -355,6 +359,10 @@ def make_vis_roc(df_history):
             y = y.reshape(-1, num_threshold)
             y_mean = y.mean(axis=0)
             y_std = y.std(axis=0) / np.sqrt(y.shape[0])
+            sorted_indices = np.argsort(x)
+            x = x[sorted_indices]
+            y_mean = y_mean[sorted_indices]
+            y_std = y_std[sorted_indices]
             xlabel = 'FPR'
             ylabel = 'TPR'
             ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
