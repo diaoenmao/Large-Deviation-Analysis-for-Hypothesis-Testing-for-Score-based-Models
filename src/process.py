@@ -43,7 +43,7 @@ def make_control_list(mode, data, model):
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
             # test_mode = ['hst-t']
-            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
+            n = ['1', '2', '4', '8', '16', '64', '128', '256']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -67,7 +67,7 @@ def make_control_list(mode, data, model):
             controls = controls_mean + controls_logvar
         elif data == 'RBM':
             test_mode = ['hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
+            n = ['1', '2', '4', '8', '16', '64', '128', '256']
             ptb = []
             ptb_W = [0.005, 0.007, 0.009, 0.01, 0.011, 0.012, 0.014, 0.015, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
                      0.04, 0.045, 0.05, 0.075, 0.1]
@@ -81,7 +81,7 @@ def make_control_list(mode, data, model):
         elif data == 'EXP':
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
             # test_mode = ['hst-t']
-            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
+            n = ['1', '2', '4', '8', '16', '64', '128', '256']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
@@ -98,7 +98,7 @@ def make_control_list(mode, data, model):
         if data == 'MVN':
             # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
             test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
+            n = ['1', '2', '4', '8', '16', '64', '128', '256']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_mean = float(1)
@@ -114,7 +114,7 @@ def make_control_list(mode, data, model):
             controls = controls_mean + controls_logvar
         elif data == 'RBM':
             test_mode = ['hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
+            n = ['1', '2', '4', '8', '16', '64', '128', '256']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_W = float(0.03)
@@ -124,7 +124,7 @@ def make_control_list(mode, data, model):
             controls = controls_W
         elif data == 'EXP':
             test_mode = ['hst-t', 'hst-e']
-            n = ['1', '5', '10', '50', '100', '500', '1000', '5000']
+            n = ['1', '2', '4', '8', '16', '64', '128', '256']
             data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_tau = float(1)
@@ -155,8 +155,9 @@ def main():
     processed_result = process_result(controls)
     df_mean = make_df(processed_result, 'mean', True)
     df_history = make_df(processed_result, 'history', False)
-    make_vis_threshold(df_history)
-    make_vis_roc(df_history)
+    make_vis_exponent(df_history)
+    # make_vis_rate(df_history)
+    # make_vis_roc(df_history)
     return
 
 
@@ -270,7 +271,73 @@ def make_df(processed_result, mode, write):
     return df
 
 
-def make_vis_threshold(df_history):
+def make_vis_exponent(df_history):
+    label_dict = {'lrt-e': 'LRT (Empirical)', 'hst-e': 'HST (Empirical)', 'lrt-t': 'LRT (Theoretical)',
+                  'hst-t': 'HST (Theoretical)'}
+    color_dict = {'lrt-e': 'red', 'hst-e': 'blue', 'lrt-t': 'orange', 'hst-t': 'dodgerblue'}
+    linestyle_dict = {'lrt-e': '-', 'hst-e': '--', 'lrt-t': ':', 'hst-t': '-.'}
+    marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
+    loc_dict = {'pep': 'upper right', 'nep': 'lower right'}
+    fontsize_dict = {'legend': 12, 'label': 16, 'ticks': 16}
+    metric_name_name_dict = {'fpr': 'Positive Error Exponent', 'fnr': 'Negative Error Exponent'}
+    figsize = (5, 4)
+    fig = {}
+    ax_dict_1 = {}
+    for df_name in df_history:
+        df_name_list = df_name.split('_')
+        metric_name, stat = df_name_list[-2], df_name_list[-1]
+        mask = metric_name in ['fpr', 'fnr'] and stat == 'mean'
+        if mask:
+            pivot = df_name_list[2]
+            df_name_threshold = '_'.join([*df_name_list[:-2], 'threshold', 'mean'])
+            fig_name = '_'.join([*df_name_list[:2], *df_name_list[3:-1]])
+            fig[fig_name] = plt.figure(fig_name, figsize=figsize)
+            if fig_name not in ax_dict_1:
+                ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
+            ax_1 = ax_dict_1[fig_name]
+            x = df_history[df_name_threshold].iloc[0].to_numpy()
+            x = x.reshape(-1, num_threshold)
+            x = x.mean(axis=0)
+            y = df_history[df_name].iloc[0].to_numpy()
+            y = y.reshape(-1, num_threshold)
+            y_mean = y.mean(axis=0)
+            valid_mask = (y_mean > 0)
+            x = x[valid_mask]
+            y = y[:, valid_mask]
+            n = float(df_name_list[-3])
+            y = 1 / n * np.log(y)
+            y_mean = y.mean(axis=0)
+            y_std = y.std(axis=0) / np.sqrt(y.shape[0])
+            sorted_indices = np.argsort(x)
+            x = x[sorted_indices]
+            y_mean = y_mean[sorted_indices]
+            y_std = y_std[sorted_indices]
+            xlabel = 'Threshold'
+            ylabel = metric_name_name_dict[metric_name]
+            ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
+                      linestyle=linestyle_dict[pivot])
+            ax_1.fill_between(x, (y_mean - y_std), (y_mean + y_std), color=color_dict[pivot], alpha=.1)
+            ax_1.set_xlabel(xlabel, fontsize=fontsize_dict['label'])
+            ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
+            ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
+            ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
+            ax_1.legend(fontsize=fontsize_dict['legend'])
+    for fig_name in fig:
+        fig_name_list = fig_name.split('_')
+        data_name, metric_name = fig_name_list[0], fig_name_list[4]
+        fig[fig_name] = plt.figure(fig_name)
+        ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
+        dir_name = 'error exponent'
+        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name_name_dict[metric_name])
+        fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
+        makedir_exist_ok(dir_path)
+        plt.tight_layout()
+        plt.savefig(fig_path, dpi=dpi, bbox_inches='tight', pad_inches=0.03)
+        plt.close(fig_name)
+    return
+
+
+def make_vis_rate(df_history):
     label_dict = {'lrt-e': 'LRT (Empirical)', 'hst-e': 'HST (Empirical)', 'lrt-t': 'LRT (Theoretical)',
                   'hst-t': 'HST (Theoretical)'}
     color_dict = {'lrt-e': 'red', 'hst-e': 'blue', 'lrt-t': 'orange', 'hst-t': 'dodgerblue'}
@@ -319,7 +386,7 @@ def make_vis_threshold(df_history):
         data_name, metric_name = fig_name_list[0], fig_name_list[4]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
-        dir_name = 'threshold'
+        dir_name = 'rate'
         dir_path = os.path.join(vis_path, dir_name, data_name, metric_name)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)

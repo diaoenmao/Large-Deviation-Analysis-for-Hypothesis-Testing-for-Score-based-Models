@@ -16,7 +16,7 @@ class HST:
     def compute_fpr_tpr_theoretical(self, null, alter, null_model, alter_model, threshold):
         def fpr_objective(theta, T):
             theta.data.clamp_(min=0)
-            exponent = theta * (null_score / 2 - T)
+            exponent = theta * (null_score - T)
             element_exp = exponent.exp()
             element_exp.data.clamp_(min=0, max=1)
             obj = element_exp.mean()
@@ -24,7 +24,7 @@ class HST:
 
         def fnr_objective(theta, T):
             theta.data.clamp_(min=0)
-            exponent = theta * (-alter_score / 2 + T)
+            exponent = theta * (-alter_score + T)
             element_exp = exponent.exp()
             element_exp.data.clamp_(min=0, max=1)
             obj = element_exp.mean()
@@ -74,6 +74,6 @@ class HST:
 
     def score(self, data, null_model, alter_model):
         """Calculate Hyvarinen Score Difference"""
-        score = 2 * (null_model.hscore(data) - alter_model.hscore(data))
+        score = null_model.hscore(data) - alter_model.hscore(data)
         score = score.reshape(-1)
         return score
