@@ -6,7 +6,7 @@ from config import cfg
 from sklearn.metrics import roc_curve
 from .lrt import LRT
 from .hst import HST
-from .utils import make_score, compute_fpr_tpr_empirical
+from .utils import make_score, compute_fpr_tpr_empirical, compute_fpr_tpr_theoretical
 
 
 class HypothesisTest:
@@ -17,6 +17,7 @@ class HypothesisTest:
         self.result = {'threshold': [], 'fpr': [], 'fnr': []}
         self.num_threshold = 300
         self.num_test_emp = 10
+        self.optim_iter = 10
 
     def make_ht(self):
         if self.ht_mode[0] in ['lrt']:
@@ -33,8 +34,8 @@ class HypothesisTest:
             idx = np.linspace(0, 1, self.num_threshold)
             threshold = []
             for i in range(len(alter_model)):
-                null_score_i = make_score(null, null_model, alter_model[i], self.ht.score)
-                alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score)
+                null_score_i = make_score(null, null_model, alter_model[i], self.ht.score, cfg['num_samples_test'])
+                alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score, cfg['num_samples_test'])
                 score_i = torch.cat([null_score_i, alter_score_i], dim=0)
                 min_value = torch.finfo(score_i.dtype).min
                 max_value = torch.finfo(score_i.dtype).max
@@ -66,8 +67,10 @@ class HypothesisTest:
                     target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
                     fpr, fnr = [], []
                     for i in range(len(alter_model)):
-                        null_score_i = make_score(null, null_model, alter_model[i], self.ht.score)
-                        alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score)
+                        null_score_i = make_score(null, null_model, alter_model[i], self.ht.score,
+                                                  cfg['num_samples_test'])
+                        alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score,
+                                                   cfg['num_samples_test'])
                         score_i = torch.cat([null_score_i, alter_score_i], dim=0)
                         fpr_i, fnr_i = compute_fpr_tpr_empirical(target, score_i, threshold)
                         fpr.append(fpr_i)
@@ -77,8 +80,8 @@ class HypothesisTest:
             elif self.ht_mode[1] == 't':
                 fpr, fnr = [], []
                 for i in range(len(alter_model)):
-                    fpr_i, fnr_i = self.ht.compute_fpr_tpr_theoretical(null, alter, null_model, alter_model[i],
-                                                                       threshold)
+                    fpr_i, fnr_i = compute_fpr_tpr_theoretical(null, alter, null_model, alter_model[i],
+                                                               threshold, self.ht.score, self.optim_iter)
                     fpr.append(fpr_i)
                     fnr.append(fnr_i)
                 fpr = np.stack(fpr, axis=0).mean(axis=0)
