@@ -18,19 +18,25 @@ def make_score(data, null_model, alter_model, score_fn, n):
     return score
 
 
-def compute_fpr_tpr_empirical(y_true, y_score, threshold):
+def compute_fpr_tpr_empirical(null, alter, null_model, alter_model, score_fn, threshold, target):
+    null_score = make_score(null, null_model, alter_model[i], score_fn,
+                            cfg['num_samples_test'])
+    alter_score = make_score(alter, null_model, alter_model[i], score_fn,
+                             cfg['num_samples_test'])
+    score = torch.cat([null_score, alter_score], dim=0)
+
     # Expand dimensions to allow broadcasting
-    y_true = y_true[:, None]  # Shape [N, 1]
-    y_score = y_score[:, None]  # Shape [N, 1]
+    target = target[:, None]  # Shape [N, 1]
+    score = score[:, None]  # Shape [N, 1]
 
     # Generate predictions based on thresholds
-    y_pred = (y_score >= threshold).float()  # Shape [N, T] where T is number of thresholds
+    pred = (score >= threshold).float()  # Shape [N, T] where T is number of thresholds
 
     # Compute TP, TN, FP, FN
-    TP = torch.sum((y_pred == 1) & (y_true == 1), dim=0).float()
-    TN = torch.sum((y_pred == 0) & (y_true == 0), dim=0).float()
-    FP = torch.sum((y_pred == 1) & (y_true == 0), dim=0).float()
-    FN = torch.sum((y_pred == 0) & (y_true == 1), dim=0).float()
+    TP = torch.sum((pred == 1) & (target == 1), dim=0).float()
+    TN = torch.sum((pred == 0) & (target == 0), dim=0).float()
+    FP = torch.sum((pred == 1) & (target == 0), dim=0).float()
+    FN = torch.sum((pred == 0) & (target == 1), dim=0).float()
 
     # Compute FPR and FNR
     FPR = FP / (FP + TN)
@@ -71,8 +77,8 @@ def compute_fpr_tpr_theoretical(null, alter, null_model, alter_model, threshold,
         return loss
 
     with torch.no_grad():
-        null_score = make_score(null, null_model, alter_model, score_fn, cfg['num_samples_test']).detach()
-        alter_score = make_score(alter, null_model, alter_model, score_fn, cfg['num_samples_test']).detach()
+        null_score = make_score(null, null_model, alter_model, score_fn, 1).detach()
+        alter_score = make_score(alter, null_model, alter_model, score_fn, 1).detach()
     threshold[threshold == -float('inf')] = 10 * threshold[torch.isfinite(threshold)].min()
     threshold[threshold == float('inf')] = 10 * threshold[torch.isfinite(threshold)].max()
     fpr, fnr = [], []
@@ -91,8 +97,6 @@ def compute_fpr_tpr_theoretical(null, alter, null_model, alter_model, threshold,
             fnr_optimizer.step(fnr_closure)
         fpr_i = fpr_objective(fpr_theta_i, threshold_i)
         fnr_i = fnr_objective(fnr_theta_i, threshold_i)
-        # print(i, 'fpr', fpr_theta_i.data, fpr_i)
-        # print(i, 'fnr', fnr_theta_i.data, fnr_i)
         fpr.append(fpr_i.item())
         fnr.append(fnr_i.item())
     fpr = np.array(fpr)

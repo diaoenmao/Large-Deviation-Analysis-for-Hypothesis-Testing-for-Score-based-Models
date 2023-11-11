@@ -40,10 +40,10 @@ def make_control(control_name):
 def make_control_list(mode, data, model):
     if mode == 'ptb':
         if data == 'MVN':
-            # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
-            test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            # test_mode = ['hst-t']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -52,8 +52,10 @@ def make_control_list(mode, data, model):
                 ptb_mean_i = float(ptb_mean[i])
                 ptb_i = '{}-{}'.format(ptb_mean_i, ptb_logvar)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_mean = make_control(control_name)
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_mean_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_mean_e = make_control(control_name_e)
             ptb = []
             ptb_mean = float(0)
             ptb_logvar = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9,
@@ -62,12 +64,16 @@ def make_control_list(mode, data, model):
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_i = '{}-{}'.format(ptb_mean, ptb_logvar_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_logvar = make_control(control_name)
-            controls = controls_mean + controls_logvar
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_logvar_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_logvar_e = make_control(control_name_e)
+            controls = controls_mean_t + controls_logvar_t + controls_mean_e + controls_logvar_e
         elif data == 'RBM':
-            test_mode = ['hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
+            test_mode_t = ['hst-t']
+            test_mode_e = ['hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
             ptb_W = [0.005, 0.007, 0.009, 0.01, 0.011, 0.012, 0.014, 0.015, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
                      0.04, 0.045, 0.05, 0.075, 0.1]
@@ -75,63 +81,67 @@ def make_control_list(mode, data, model):
                 ptb_W_i = float(ptb_W[i])
                 ptb_i = '{}'.format(ptb_W_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_W = make_control(control_name)
-            controls = controls_W
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_W_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_W_e = make_control(control_name_e)
+            controls = controls_W_t + controls_W_e
         elif data == 'EXP':
-            test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            # test_mode = ['hst-t']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
             for i in range(len(ptb_tau)):
-                ptb_W_i = float(ptb_tau[i])
-                ptb_i = '{}'.format(ptb_W_i)
+                ptb_tau_i = float(ptb_tau[i])
+                ptb_i = '{}'.format(ptb_tau_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_W = make_control(control_name)
-            controls = controls_W
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_tau_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_tau_e = make_control(control_name_e)
+            controls = controls_tau_t + controls_tau_e
         else:
             raise ValueError('not valid data')
     elif mode == 'ds':
         if data == 'MVN':
-            # test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
-            test_mode = ['lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
-            data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_mean = float(1)
             ptb_logvar = float(0)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
-            controls_mean = make_control(control_name)
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
+            controls_mean_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
+            controls_mean_e = make_control(control_name_e)
             ptb_mean = float(0)
             ptb_logvar = float(1)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name = [[[data], test_mode, ptb, data_size]]
-            controls_logvar = make_control(control_name)
-            controls = controls_mean + controls_logvar
+            control_name_t = [[[data], test_mode_t, ptb, n_t, data_size]]
+            controls_logvar_t = make_control(control_name_t)
+            control_name_e = [[[data], test_mode_e, ptb, n_e, data_size]]
+            controls_logvar_e = make_control(control_name_e)
+            controls = controls_mean_t + controls_logvar_t + controls_mean_e + controls_logvar_e
         elif data == 'RBM':
-            test_mode = ['hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
-            data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
+            test_mode_t = ['hst-t']
+            test_mode_e = ['hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_W = float(0.03)
             ptb = ['{}'.format(ptb_W)]
-            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
-            controls_W = make_control(control_name)
-            controls = controls_W
-        elif data == 'EXP':
-            test_mode = ['hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
-            data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
-            data_size = [str(int(x)) for x in data_size]
-            ptb_tau = float(1)
-            ptb = ['{}'.format(ptb_tau)]
-            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
-            controls_tau = make_control(control_name)
-            controls = controls_tau
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
+            controls_W_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
+            controls_W_e = make_control(control_name_e)
+            controls = controls_W_t + controls_W_e
         else:
             raise ValueError('Not valid data')
     else:
@@ -156,8 +166,6 @@ def main():
     df_mean = make_df(processed_result, 'mean', True)
     df_history = make_df(processed_result, 'history', False)
     make_vis_exponent(df_history)
-    # make_vis_rate(df_history)
-    # make_vis_roc(df_history)
     return
 
 
@@ -193,14 +201,6 @@ def gather_result(control, model_tag, processed_result):
                 processed_result['test/threshold']['history'][exp_idx][i] = threshold_i
                 processed_result['test/fpr']['history'][exp_idx][i] = fpr_i
                 processed_result['test/fnr']['history'][exp_idx][i] = fnr_i
-            for i in range(len(processed_result['test/fpr']['history'][exp_idx])):
-                fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
-                fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
-                sorted_indices = np.argsort(fpr_i)
-                fpr_i = fpr_i[sorted_indices]
-                fnr_i = fnr_i[sorted_indices]
-                auroc_i, _ = quad(lambda x: np.interp(x, fpr_i, 1 - fnr_i), 0, 1)
-                processed_result['test/AUROC']['mean'][i] = auroc_i
             for metric_name in ['test/threshold', 'test/fpr', 'test/fnr']:
                 processed_result[metric_name]['history'][exp_idx] = (
                     processed_result[metric_name]['history'][exp_idx].reshape(-1).tolist())
@@ -272,10 +272,37 @@ def make_df(processed_result, mode, write):
 
 
 def make_vis_exponent(df_history):
-    label_dict = {'lrt-e': 'LRT (Empirical)', 'hst-e': 'HST (Empirical)', 'lrt-t': 'LRT (Theoretical)',
-                  'hst-t': 'HST (Theoretical)'}
-    color_dict = {'lrt-e': 'red', 'hst-e': 'blue', 'lrt-t': 'orange', 'hst-t': 'dodgerblue'}
-    linestyle_dict = {'lrt-e': '-', 'hst-e': '--', 'lrt-t': ':', 'hst-t': '-.'}
+    label_dict = {'lrt': 'LRT', 'hst': 'HST'}
+    colors = plt.cm.get_cmap('tab10').colors
+    n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+    color_dict = {'lrt': {'t': {'1': colors[-1]},
+                          'e': {n_e[i]: colors[i] for i in range(len(n_e))}},
+                  'hst': {'t': {'1': colors[-1]},
+                          'e': {n_e[i]: colors[i] for i in range(len(n_e))}}}
+    linestyle_dict = {
+        'lrt': {
+            't': {'1': '-'},
+            'e': {'1': '--',
+                  '2': '-.',
+                  '4': ':',
+                  '8': (0, (5, 5)),
+                  '16': (0, (5, 1)),
+                  '32': (0, (1, 5)),
+                  '64': (0, (3, 5, 5, 5)),
+                  '128': (0, (3, 1, 1, 1, 1, 1))}
+        },
+        'hst': {
+            't': {'1': '-'},
+            'e': {'1': '--',
+                  '2': '-.',
+                  '4': ':',
+                  '8': (0, (5, 5)),
+                  '16': (0, (5, 1)),
+                  '32': (0, (1, 5)),
+                  '64': (0, (3, 5, 5, 5)),
+                  '128': (0, (3, 1, 1, 1, 1, 1))}
+        }
+    }
     marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
     loc_dict = {'pep': 'upper right', 'nep': 'lower right'}
     fontsize_dict = {'legend': 12, 'label': 16, 'ticks': 16}
@@ -288,9 +315,10 @@ def make_vis_exponent(df_history):
         metric_name, stat = df_name_list[-2], df_name_list[-1]
         mask = metric_name in ['fpr', 'fnr'] and stat == 'mean'
         if mask:
-            pivot = df_name_list[2]
+            ht_mode, n = df_name_list[2], df_name_list[4]
+            ht_mode_list = df_name_list[2].split('-')
             df_name_threshold = '_'.join([*df_name_list[:-2], 'threshold', 'mean'])
-            fig_name = '_'.join([*df_name_list[:2], *df_name_list[3:-1]])
+            fig_name = '_'.join([*df_name_list[:2], ht_mode_list[0], df_name_list[3], df_name_list[-2]])
             fig[fig_name] = plt.figure(fig_name, figsize=figsize)
             if fig_name not in ax_dict_1:
                 ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
@@ -300,12 +328,14 @@ def make_vis_exponent(df_history):
             x = x.mean(axis=0)
             y = df_history[df_name].iloc[0].to_numpy()
             y = y.reshape(-1, num_threshold)
-            y_mean = y.mean(axis=0)
-            valid_mask = (y_mean > 0)
+            valid_mask = np.all(y > 0, axis=0)
             x = x[valid_mask]
             y = y[:, valid_mask]
-            n = float(df_name_list[-3])
-            y = 1 / n * np.log(y)
+            if ht_mode_list[1] == 'e':
+                n_ = float(df_name_list[-3])
+                y = 1 / n_ * np.log(y)
+            else:
+                y = np.log(y)
             y_mean = y.mean(axis=0)
             y_std = y.std(axis=0) / np.sqrt(y.shape[0])
             sorted_indices = np.argsort(x)
@@ -314,139 +344,29 @@ def make_vis_exponent(df_history):
             y_std = y_std[sorted_indices]
             xlabel = 'Threshold'
             ylabel = metric_name_name_dict[metric_name]
-            ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
-                      linestyle=linestyle_dict[pivot])
-            ax_1.fill_between(x, (y_mean - y_std), (y_mean + y_std), color=color_dict[pivot], alpha=.1)
+            if ht_mode_list[1] == 't':
+                label = 'Theoretical'
+            else:
+                label = 'n={}'.format(n)
+            ax_1.plot(x, y_mean, label=label,
+                      color=color_dict[ht_mode_list[0]][ht_mode_list[1]][n],
+                      linestyle=linestyle_dict[ht_mode_list[0]][ht_mode_list[1]][n])
+            ax_1.fill_between(x, (y_mean - y_std), (y_mean + y_std),
+                              color=color_dict[ht_mode_list[0]][ht_mode_list[1]][n], alpha=.1)
             ax_1.set_xlabel(xlabel, fontsize=fontsize_dict['label'])
             ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
             ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
+            if ht_mode_list[1] == 'e' and n == '1':
+                ax_1.set_ylim(min(y_mean))
             ax_1.legend(fontsize=fontsize_dict['legend'])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')
-        data_name, metric_name = fig_name_list[0], fig_name_list[4]
+        data_name, ht_mode_0, metric_name = fig_name_list[0], fig_name_list[2], fig_name_list[-1]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
         dir_name = 'error exponent'
-        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name_name_dict[metric_name])
-        fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
-        makedir_exist_ok(dir_path)
-        plt.tight_layout()
-        plt.savefig(fig_path, dpi=dpi, bbox_inches='tight', pad_inches=0.03)
-        plt.close(fig_name)
-    return
-
-
-def make_vis_rate(df_history):
-    label_dict = {'lrt-e': 'LRT (Empirical)', 'hst-e': 'HST (Empirical)', 'lrt-t': 'LRT (Theoretical)',
-                  'hst-t': 'HST (Theoretical)'}
-    color_dict = {'lrt-e': 'red', 'hst-e': 'blue', 'lrt-t': 'orange', 'hst-t': 'dodgerblue'}
-    linestyle_dict = {'lrt-e': '-', 'hst-e': '--', 'lrt-t': ':', 'hst-t': '-.'}
-    marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
-    loc_dict = {'fpr': 'upper right', 'fnr': 'lower right'}
-    fontsize_dict = {'legend': 12, 'label': 16, 'ticks': 16}
-    figsize = (5, 4)
-    fig = {}
-    ax_dict_1 = {}
-    for df_name in df_history:
-        df_name_list = df_name.split('_')
-        metric_name, stat = df_name_list[-2], df_name_list[-1]
-        mask = metric_name in ['fpr', 'fnr'] and stat == 'mean'
-        if mask:
-            pivot = df_name_list[2]
-            df_name_threshold = '_'.join([*df_name_list[:-2], 'threshold', 'mean'])
-            fig_name = '_'.join([*df_name_list[:2], *df_name_list[3:-1]])
-            fig[fig_name] = plt.figure(fig_name, figsize=figsize)
-            if fig_name not in ax_dict_1:
-                ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
-            ax_1 = ax_dict_1[fig_name]
-            x = df_history[df_name_threshold].iloc[0].to_numpy()
-            x = x.reshape(-1, num_threshold)
-            x = x.mean(axis=0)
-            y = df_history[df_name].iloc[0].to_numpy()
-            y = y.reshape(-1, num_threshold)
-            y_mean = y.mean(axis=0)
-            y_std = y.std(axis=0) / np.sqrt(y.shape[0])
-            sorted_indices = np.argsort(x)
-            x = x[sorted_indices]
-            y_mean = y_mean[sorted_indices]
-            y_std = y_std[sorted_indices]
-            xlabel = 'Threshold'
-            ylabel = metric_name.upper()
-            ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
-                      linestyle=linestyle_dict[pivot])
-            ax_1.fill_between(x, (y_mean - y_std), (y_mean + y_std), color=color_dict[pivot], alpha=.1)
-            ax_1.set_xlabel(xlabel, fontsize=fontsize_dict['label'])
-            ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
-            ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            ax_1.legend(fontsize=fontsize_dict['legend'])
-    for fig_name in fig:
-        fig_name_list = fig_name.split('_')
-        data_name, metric_name = fig_name_list[0], fig_name_list[4]
-        fig[fig_name] = plt.figure(fig_name)
-        ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
-        dir_name = 'rate'
-        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name)
-        fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
-        makedir_exist_ok(dir_path)
-        plt.tight_layout()
-        plt.savefig(fig_path, dpi=dpi, bbox_inches='tight', pad_inches=0.03)
-        plt.close(fig_name)
-    return
-
-
-def make_vis_roc(df_history):
-    label_dict = {'lrt-e': 'LRT (Empirical)', 'hst-e': 'HST (Empirical)', 'lrt-t': 'LRT (Theoretical)',
-                  'hst-t': 'HST (Theoretical)'}
-    color_dict = {'lrt-e': 'red', 'hst-e': 'blue', 'lrt-t': 'orange', 'hst-t': 'dodgerblue'}
-    linestyle_dict = {'lrt-e': '-', 'hst-e': '--', 'lrt-t': ':', 'hst-t': '-.'}
-    marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
-    loc_dict = {'fpr': 'lower right'}
-    fontsize_dict = {'legend': 12, 'label': 16, 'ticks': 16}
-    figsize = (5, 4)
-    fig = {}
-    ax_dict_1 = {}
-    for df_name in df_history:
-        df_name_list = df_name.split('_')
-        metric_name, stat = df_name_list[-2], df_name_list[-1]
-        mask = metric_name in ['fpr'] and stat == 'mean'
-        if mask:
-            pivot = df_name_list[2]
-            df_name_fnr = '_'.join([*df_name_list[:-2], 'fnr', 'mean'])
-            fig_name = '_'.join([*df_name_list[:2], *df_name_list[3:-1]])
-            fig[fig_name] = plt.figure(fig_name, figsize=figsize)
-            if fig_name not in ax_dict_1:
-                ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
-            ax_1 = ax_dict_1[fig_name]
-            x = df_history[df_name].iloc[0].to_numpy()
-            x = x.reshape(-1, num_threshold)
-            x = x.mean(axis=0)
-            y = 1 - df_history[df_name_fnr].iloc[0].to_numpy()
-            y = y.reshape(-1, num_threshold)
-            y_mean = y.mean(axis=0)
-            y_std = y.std(axis=0) / np.sqrt(y.shape[0])
-            sorted_indices = np.argsort(x)
-            x = x[sorted_indices]
-            y_mean = y_mean[sorted_indices]
-            y_std = y_std[sorted_indices]
-            xlabel = 'FPR'
-            ylabel = 'TPR'
-            ax_1.plot(x, y_mean, label=label_dict[pivot], color=color_dict[pivot],
-                      linestyle=linestyle_dict[pivot])
-            ax_1.fill_between(x, (y_mean - y_std), (y_mean + y_std), color=color_dict[pivot], alpha=.1)
-            ax_1.set_xlabel(xlabel, fontsize=fontsize_dict['label'])
-            ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
-            ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            ax_1.legend(loc=loc_dict[metric_name], fontsize=fontsize_dict['legend'])
-    for fig_name in fig:
-        fig_name_list = fig_name.split('_')
-        data_name = fig_name_list[0]
-        fig[fig_name] = plt.figure(fig_name)
-        ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
-        dir_name = 'roc'
-        dir_path = os.path.join(vis_path, dir_name, data_name)
+        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name_name_dict[metric_name], ht_mode_0)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)
         plt.tight_layout()

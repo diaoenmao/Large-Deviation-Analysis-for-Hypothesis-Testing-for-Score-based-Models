@@ -53,8 +53,10 @@ def main():
     if mode == 'ptb':
         script_name = [['{}_ht.py'.format(run)]]
         if data == 'MVN':
-            test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
             ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
                         1, 2]
@@ -63,9 +65,12 @@ def main():
                 ptb_mean_i = float(ptb_mean[i])
                 ptb_i = '{}-{}'.format(ptb_mean_i, ptb_logvar)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_mean = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                          control_name)
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_mean_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                            control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_mean_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                            control_name_e)
             ptb = []
             ptb_mean = float(0)
             ptb_logvar = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9,
@@ -74,13 +79,18 @@ def main():
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_i = '{}-{}'.format(ptb_mean, ptb_logvar_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_logvar = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                            control_name)
-            controls = controls_mean + controls_logvar
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_logvar_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                              control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_logvar_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                              control_name_e)
+            controls = controls_mean_t + controls_logvar_t + controls_mean_e + controls_logvar_e
         elif data == 'RBM':
-            test_mode = ['hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
+            test_mode_t = ['hst-t']
+            test_mode_e = ['hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
             ptb_W = [0.005, 0.007, 0.009, 0.01, 0.011, 0.012, 0.014, 0.015, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
                      0.04, 0.045, 0.05, 0.075, 0.1]
@@ -88,68 +98,78 @@ def main():
                 ptb_W_i = float(ptb_W[i])
                 ptb_i = '{}'.format(ptb_W_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_W = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                       control_name)
-            controls = controls_W
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_W_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                         control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_W_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                         control_name_e)
+            controls = controls_W_t +controls_W_e
         elif data == 'EXP':
-            test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
             ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
                        2.0]
             for i in range(len(ptb_tau)):
-                ptb_W_i = float(ptb_tau[i])
-                ptb_i = '{}'.format(ptb_W_i)
+                ptb_tau_i = float(ptb_tau[i])
+                ptb_i = '{}'.format(ptb_tau_i)
                 ptb.append(ptb_i)
-            control_name = [[[data], [model], test_mode, ptb, n]]
-            controls_W = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                       control_name)
-            controls = controls_W
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_tau_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                           control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_tau_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                           control_name_e)
+            controls = controls_tau_t + controls_tau_e
         else:
             raise ValueError('not valid data')
     elif mode == 'ds':
         script_name = [['{}_ht.py'.format(run)]]
         if data == 'MVN':
-            test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
-            data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_mean = float(1)
             ptb_logvar = float(0)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
-            controls_mean = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                          control_name)
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
+            controls_mean_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                            control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
+            controls_mean_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                            control_name_e)
             ptb_mean = float(0)
             ptb_logvar = float(1)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name = [[[data], test_mode, ptb, n, data_size]]
-            controls_logvar = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                            control_name)
-            controls = controls_mean + controls_logvar
+            control_name_t = [[[data], test_mode_t, ptb, n_t, data_size]]
+            controls_logvar_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                              control_name_t)
+            control_name_e = [[[data], test_mode_e, ptb, n_e, data_size]]
+            controls_logvar_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                              control_name_e)
+            controls = controls_mean_t + controls_logvar_t + controls_mean_e + controls_logvar_e
         elif data == 'RBM':
-            test_mode = ['hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
-            data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
+            test_mode_t = ['hst-t']
+            test_mode_e = ['hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
             ptb_W = float(0.03)
             ptb = ['{}'.format(ptb_W)]
-            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
-            controls_W = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                       control_name)
-            controls = controls_W
-        elif data == 'EXP':
-            test_mode = ['lrt-t', 'lrt-e', 'hst-t', 'hst-e']
-            n = ['1', '2', '4', '8', '16', '64', '128', '256']
-            data_size = [5, 10, 20, 30, 40, 50, 80, 100, 150, 200]
-            data_size = [str(int(x)) for x in data_size]
-            ptb_tau = float(1)
-            ptb = ['{}'.format(ptb_tau)]
-            control_name = [[[data], [model], test_mode, ptb, n, data_size]]
-            controls_tau = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                         control_name)
-            controls = controls_tau
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
+            controls_W_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                         control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
+            controls_W_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                         control_name_e)
+            controls = controls_W_t + controls_W_e
         else:
             raise ValueError('Not valid data')
     else:

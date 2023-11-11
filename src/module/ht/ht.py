@@ -34,8 +34,8 @@ class HypothesisTest:
             idx = np.linspace(0, 1, self.num_threshold)
             threshold = []
             for i in range(len(alter_model)):
-                null_score_i = make_score(null, null_model, alter_model[i], self.ht.score, cfg['num_samples_test'])
-                alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score, cfg['num_samples_test'])
+                null_score_i = make_score(null, null_model, alter_model[i], self.ht.score, 1)
+                alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score, 1)
                 score_i = torch.cat([null_score_i, alter_score_i], dim=0)
                 min_value = torch.finfo(score_i.dtype).min
                 max_value = torch.finfo(score_i.dtype).max
@@ -67,12 +67,8 @@ class HypothesisTest:
                     target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
                     fpr, fnr = [], []
                     for i in range(len(alter_model)):
-                        null_score_i = make_score(null, null_model, alter_model[i], self.ht.score,
-                                                  cfg['num_samples_test'])
-                        alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score,
-                                                   cfg['num_samples_test'])
-                        score_i = torch.cat([null_score_i, alter_score_i], dim=0)
-                        fpr_i, fnr_i = compute_fpr_tpr_empirical(target, score_i, threshold)
+                        fpr_i, fnr_i = compute_fpr_tpr_empirical(null, alter, null_model, alter_model[i], threshold,
+                                                                 self.ht.score, target)
                         fpr.append(fpr_i)
                         fnr.append(fnr_i)
                     fpr = np.stack(fpr, axis=0).mean(axis=0)
