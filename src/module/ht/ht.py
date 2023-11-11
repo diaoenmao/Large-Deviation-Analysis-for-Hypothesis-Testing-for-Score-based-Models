@@ -6,7 +6,7 @@ from config import cfg
 from sklearn.metrics import roc_curve
 from .lrt import LRT
 from .hst import HST
-from .utils import make_score, compute_fpr_tpr_empirical, compute_fpr_tpr_theoretical
+from .utils import make_score, compute_empirical, compute_theoretical
 
 
 class HypothesisTest:
@@ -67,7 +67,7 @@ class HypothesisTest:
                     target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
                     fpr, fnr = [], []
                     for i in range(len(alter_model)):
-                        fpr_i, fnr_i = compute_fpr_tpr_empirical(null, alter, null_model, alter_model[i], threshold,
+                        fpr_i, fnr_i = compute_empirical(null, alter, null_model, alter_model[i], threshold,
                                                                  self.ht.score, target)
                         fpr.append(fpr_i)
                         fnr.append(fnr_i)
@@ -76,7 +76,7 @@ class HypothesisTest:
             elif self.ht_mode[1] == 't':
                 fpr, fnr = [], []
                 for i in range(len(alter_model)):
-                    fpr_i, fnr_i = compute_fpr_tpr_theoretical(null, alter, null_model, alter_model[i],
+                    fpr_i, fnr_i = compute_theoretical(null, alter, null_model, alter_model[i],
                                                                threshold, self.ht.score, self.optim_iter)
                     fpr.append(fpr_i)
                     fnr.append(fnr_i)

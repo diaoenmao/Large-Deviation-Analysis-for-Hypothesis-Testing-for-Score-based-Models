@@ -18,10 +18,10 @@ def make_score(data, null_model, alter_model, score_fn, n):
     return score
 
 
-def compute_fpr_tpr_empirical(null, alter, null_model, alter_model, score_fn, threshold, target):
-    null_score = make_score(null, null_model, alter_model[i], score_fn,
+def compute_empirical(null, alter, null_model, alter_model, threshold, score_fn, target):
+    null_score = make_score(null, null_model, alter_model, score_fn,
                             cfg['num_samples_test'])
-    alter_score = make_score(alter, null_model, alter_model[i], score_fn,
+    alter_score = make_score(alter, null_model, alter_model, score_fn,
                              cfg['num_samples_test'])
     score = torch.cat([null_score, alter_score], dim=0)
 
@@ -45,7 +45,7 @@ def compute_fpr_tpr_empirical(null, alter, null_model, alter_model, score_fn, th
     return FPR.cpu().numpy(), FNR.cpu().numpy()
 
 
-def compute_fpr_tpr_theoretical(null, alter, null_model, alter_model, threshold, score_fn, optim_iter):
+def compute_theoretical(null, alter, null_model, alter_model, threshold, score_fn, optim_iter):
     def fpr_objective(theta, T):
         theta.data.clamp_(min=0)
         exponent = theta * (null_score - T)
