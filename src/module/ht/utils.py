@@ -50,7 +50,6 @@ def compute_theoretical(null, alter, null_model, alter_model, threshold, score_f
         theta.data.clamp_(min=0)
         exponent = theta * (null_score - T)
         element_exp = exponent.exp()
-        element_exp.data.clamp_(min=0, max=1)
         obj = element_exp.mean()
         return obj
 
@@ -58,7 +57,6 @@ def compute_theoretical(null, alter, null_model, alter_model, threshold, score_f
         theta.data.clamp_(min=0)
         exponent = theta * (-alter_score + T)
         element_exp = exponent.exp()
-        element_exp.data.clamp_(min=0, max=1)
         obj = element_exp.mean()
         return obj
 
