@@ -5,7 +5,7 @@ from config import cfg
 
 
 def make_score(data, null_model, alter_model, score_fn, n):
-    batch_size = 1
+    batch_size = 100
     score = []
     for i in range(data.size(0) // batch_size):
         num_samples = n * batch_size

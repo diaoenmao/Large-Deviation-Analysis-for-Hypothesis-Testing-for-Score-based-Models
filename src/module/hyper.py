@@ -14,7 +14,7 @@ def process_control():
     else:
         cfg['num_samples_emp'] = None
     cfg['num_trials'] = 10
-    cfg['num_samples'] = 10000
+    cfg['num_samples'] = 100000
     if cfg['data_name'] in ['KDDCUP99']:
         data_shape = {'KDDCUP99': [39]}
         cfg['data_shape'] = data_shape[cfg['data_name']]
