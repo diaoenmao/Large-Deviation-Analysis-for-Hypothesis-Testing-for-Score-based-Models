@@ -151,8 +151,8 @@ def make_control_list(mode, data, model):
 
 def main():
     # mode = ['ptb', 'ds']
-    data_name = ['MVN', 'RBM', 'EXP']
-    # data_name = ['MVN']
+    # data_name = ['MVN', 'RBM', 'EXP']
+    data_name = ['RBM']
     mode = ['ptb']
     controls = []
     for i in range(len(mode)):
@@ -316,6 +316,7 @@ def make_vis_exponent(df_history):
         mask = metric_name in ['fpr', 'fnr'] and stat == 'mean'
         if mask:
             ht_mode, n = df_name_list[2], df_name_list[4]
+            # print(df_name_list)
             ht_mode_list = df_name_list[2].split('-')
             df_name_threshold = '_'.join([*df_name_list[:-2], 'threshold', 'mean'])
             fig_name = '_'.join([*df_name_list[:2], ht_mode_list[0], df_name_list[3], df_name_list[-2]])
@@ -328,12 +329,17 @@ def make_vis_exponent(df_history):
             x = x.mean(axis=0)
             y = df_history[df_name].iloc[0].to_numpy()
             y = y.reshape(-1, num_threshold)
+            # if df_name_list[3] == '0.01' and float(df_name_list[4]) > 4 and df_name_list[5] == 'fnr':
+            #     print(y)
             if ht_mode_list[1] == 'e':
                 n_ = float(df_name_list[-3])
+                # y[y < 1e-10] = n_ * 1e-10
                 y = 1 / n_ * np.log(y)
             else:
                 y = np.log(y)
             y_mean = y.mean(axis=0)
+            # if df_name_list[3] == '0.01' and float(df_name_list[4]) > 4 and df_name_list[5] == 'fnr':
+                # print(y_mean)
             y_std = y.std(axis=0) / np.sqrt(y.shape[0])
             sorted_indices = np.argsort(x)
             x = x[sorted_indices]
@@ -354,8 +360,8 @@ def make_vis_exponent(df_history):
             ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
             ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            if ht_mode_list[1] == 'e' and n == '1':
-                ax_1.set_ylim(min(y_mean[y_mean>-np.inf]))
+            # if ht_mode_list[1] == 'e' and n == '1':
+            #     ax_1.set_ylim(min(y_mean[y_mean>-np.inf]))
             ax_1.legend(fontsize=fontsize_dict['legend'])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')

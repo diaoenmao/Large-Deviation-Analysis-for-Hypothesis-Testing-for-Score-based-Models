@@ -15,9 +15,9 @@ class HypothesisTest:
         self.num_samples_emp = num_samples_emp
         self.ht = self.make_ht()
         self.result = {'threshold': [], 'fpr': [], 'fnr': []}
-        self.num_threshold = 300
+        self.num_threshold = 3000
         self.num_test_emp = 10
-        self.optim_iter = 10
+        self.optim_iter = 50
 
     def make_ht(self):
         if self.ht_mode[0] in ['lrt']:

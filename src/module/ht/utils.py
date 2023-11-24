@@ -26,23 +26,24 @@ def compute_empirical(null, alter, null_model, alter_model, threshold, score_fn,
     score = torch.cat([null_score, alter_score], dim=0)
 
     # Expand dimensions to allow broadcasting
-    target = target[:, None]  # Shape [N, 1]
-    score = score[:, None]  # Shape [N, 1]
+    target = target[:, None].cpu().numpy()  # Shape [N, 1]
+    score = score[:, None].cpu().numpy()  # Shape [N, 1]
+    threshold = threshold.cpu().numpy()
 
     # Generate predictions based on thresholds
-    pred = (score >= threshold).float()  # Shape [N, T] where T is number of thresholds
+    pred = (score >= threshold).astype(float)    # Shape [N, T] where T is number of thresholds
 
     # Compute TP, TN, FP, FN
-    TP = torch.sum((pred == 1) & (target == 1), dim=0).float()
-    TN = torch.sum((pred == 0) & (target == 0), dim=0).float()
-    FP = torch.sum((pred == 1) & (target == 0), dim=0).float()
-    FN = torch.sum((pred == 0) & (target == 1), dim=0).float()
+    TP = np.sum((pred == 1) & (target == 1), axis=0).astype(float)
+    TN = np.sum((pred == 0) & (target == 0), axis=0).astype(float)
+    FP = np.sum((pred == 1) & (target == 0), axis=0).astype(float)
+    FN = np.sum((pred == 0) & (target == 1), axis=0).astype(float)
 
     # Compute FPR and FNR
     FPR = FP / (FP + TN)
     FNR = FN / (TP + FN)
 
-    return FPR.cpu().numpy(), FNR.cpu().numpy()
+    return FPR, FNR
 
 
 def compute_theoretical(null, alter, null_model, alter_model, threshold, score_fn, optim_iter):
@@ -77,8 +78,8 @@ def compute_theoretical(null, alter, null_model, alter_model, threshold, score_f
     with torch.no_grad():
         null_score = make_score(null, null_model, alter_model, score_fn, 1).detach()
         alter_score = make_score(alter, null_model, alter_model, score_fn, 1).detach()
-    threshold[threshold == -float('inf')] = 10 * threshold[torch.isfinite(threshold)].min()
-    threshold[threshold == float('inf')] = 10 * threshold[torch.isfinite(threshold)].max()
+    threshold[threshold == -float('inf')] = 1 * threshold[torch.isfinite(threshold)].min()
+    threshold[threshold == float('inf')] = 1 * threshold[torch.isfinite(threshold)].max()
     fpr, fnr = [], []
     fpr_theta = nn.ParameterList(
         [nn.Parameter(torch.ones(1, device=null.device)) for _ in range(len(threshold))])
