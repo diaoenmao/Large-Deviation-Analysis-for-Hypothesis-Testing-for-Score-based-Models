@@ -22,8 +22,8 @@ if __name__ == "__main__":
     num_samples = cfg['num_samples']
     torch.manual_seed(cfg['seed'])
     torch.cuda.manual_seed(cfg['seed'])
-    # data_names = ['MVN', 'RBM', 'EXP']
-    data_names = ['RBM']
+    data_names = ['MVN', 'RBM', 'EXP']
+    # data_names = ['RBM']
     for m in range(len(data_names)):
         data_name = data_names[m]
         if data_name == 'MVN':
@@ -54,8 +54,8 @@ if __name__ == "__main__":
             v = cfg['rbm']['v']
             h = cfg['rbm']['h']
             num_iters = cfg['rbm']['num_iters']
-            ptb_W = [0.0001, 0.0002, 0.0004, 0.0006, 0.0008, 0.001, 0.0012, 0.0014, 0.0016, 0.0018, 0.002, 0.0025,
-                     0.003, 0.0035, 0.004, 0.0045, 0.005, 0.0075, 0.01]
+            ptb_W = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                     0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_W)):
                 ptb_W_i = float(ptb_W[i])
                 params_i = {'num_trials': num_trials, 'num_samples': num_samples, 'W': W, 'v': v, 'h': h,

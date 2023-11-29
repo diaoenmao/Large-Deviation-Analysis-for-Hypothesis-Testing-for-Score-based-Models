@@ -151,8 +151,8 @@ def make_control_list(mode, data, model):
 
 def main():
     # mode = ['ptb', 'ds']
-    # data_name = ['MVN', 'RBM', 'EXP']
-    data_name = ['RBM']
+    data_name = ['MVN', 'RBM', 'EXP']
+    # data_name = ['RBM']
     mode = ['ptb']
     controls = []
     for i in range(len(mode)):
@@ -335,6 +335,8 @@ def make_vis_exponent(df_history):
             else:
                 y = np.log(y)
             y_mean = y.mean(axis=0)
+            if len(y_mean[y_mean>-np.inf]) == 0:
+                continue
             y_std = y.std(axis=0) / np.sqrt(y.shape[0])
             sorted_indices = np.argsort(x)
             x = x[sorted_indices]
@@ -355,8 +357,8 @@ def make_vis_exponent(df_history):
             ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
             ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            if ht_mode_list[1] == 'e' and n == '1':
-                ax_1.set_ylim(min(y_mean[y_mean>-np.inf]))
+            if ht_mode_list[1] == 'e' and n == '128':
+                ax_1.set_ylim(min(y_mean[y_mean>-np.inf]), 0.01)
             ax_1.legend(fontsize=fontsize_dict['legend'])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')
