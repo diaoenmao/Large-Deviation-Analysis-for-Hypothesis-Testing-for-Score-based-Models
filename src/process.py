@@ -135,7 +135,7 @@ def make_control_list(mode, data, model):
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
-            ptb_W = float(0.03)
+            ptb_W = float(0.01)
             ptb = ['{}'.format(ptb_W)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_W_t = make_control(control_name_t)
@@ -304,8 +304,8 @@ def make_vis_exponent(df_history):
         }
     }
     marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
-    loc_dict = {'pep': 'upper right', 'nep': 'lower right'}
-    fontsize_dict = {'legend': 12, 'label': 16, 'ticks': 16}
+    loc_dict = {'fpr': 'upper right', 'fnr': 'lower left'}
+    fontsize_dict = {'legend': 10, 'label': 16, 'ticks': 16}
     metric_name_name_dict = {'fpr': 'Positive Error Exponent', 'fnr': 'Negative Error Exponent'}
     figsize = (5, 4)
     fig = {}
@@ -359,7 +359,7 @@ def make_vis_exponent(df_history):
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             if ht_mode_list[1] == 'e' and n == '128':
                 ax_1.set_ylim(min(y_mean[y_mean>-np.inf]), 0.01)
-            ax_1.legend(fontsize=fontsize_dict['legend'])
+            ax_1.legend(fontsize=fontsize_dict['legend'], loc=loc_dict[metric_name])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')
         data_name, ht_mode_0, metric_name = fig_name_list[0], fig_name_list[2], fig_name_list[-1]

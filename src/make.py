@@ -161,7 +161,7 @@ def main():
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
-            ptb_W = float(0.03)
+            ptb_W = float(0.01)
             ptb = ['{}'.format(ptb_W)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_W_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
