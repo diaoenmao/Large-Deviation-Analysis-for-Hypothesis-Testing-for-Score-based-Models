@@ -3,20 +3,21 @@ import numpy as np
 import torch
 import pandas as pd
 from torch.utils.data import Dataset
-from module import check_exists, makedir_exist_ok, save, load
+from module import check_exists, makedir_exist_ok, save, load, make_footprint
 
 
 class KDDCUP99(Dataset):
     data_name = 'KDDCUP99'
 
-    def __init__(self, root, split):
+    def __init__(self, root, **params):
         super().__init__()
         self.root = os.path.expanduser(root)
-        self.split = split
+        self.ptb = params['ptb']
+        self.footprint = make_footprint(params)
+        split_name = '{}_{}'.format(self.data_name, self.footprint)
         if not check_exists(os.path.join(self.processed_folder)):
             self.process()
-        self.id, self.data, self.target = load(os.path.join(self.processed_folder, '{}'.format(self.split)))
-        self.classes_to_labels, self.target_size = load(os.path.join(self.processed_folder, 'meta'))
+        self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)))
 
     def __getitem__(self, index):
         id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
@@ -38,10 +39,8 @@ class KDDCUP99(Dataset):
     def process(self):
         if not check_exists(self.raw_folder):
             self.download()
-        train_set, test_set, meta = self.make_data()
-        save(train_set, os.path.join(self.processed_folder, 'train'))
-        save(test_set, os.path.join(self.processed_folder, 'test'))
-        save(meta, os.path.join(self.processed_folder, 'meta'))
+        dataset = self.make_data()
+        save(dataset, os.path.join(self.processed_folder, '{}_{}'.format(self.data_name, self.footprint)))
         return
 
     def download(self):
@@ -58,38 +57,40 @@ class KDDCUP99(Dataset):
         from sklearn.preprocessing import LabelEncoder, Normalizer
         from sklearn.datasets import fetch_kddcup99
         dataset = fetch_kddcup99(as_frame=True)
-        data, target = dataset['data'], dataset['target']
-        data['label'] = target
-        data = data.drop('num_outbound_cmds', axis=1)
-        data = data.drop('is_host_login', axis=1)
-        data['protocol_type'] = data['protocol_type'].astype('category')
-        data['service'] = data['service'].astype('category')
-        data['flag'] = data['flag'].astype('category')
-        cat_columns = data.select_dtypes(['category']).columns
-        data[cat_columns] = data[cat_columns].apply(lambda x: x.cat.codes)
-        data = data.drop_duplicates(subset=None, keep='first')
+        dataframe, target = dataset['data'], dataset['target']
+        dataframe['label'] = target
+        dataframe = dataframe.drop('num_outbound_cmds', axis=1)
+        dataframe = dataframe.drop('is_host_login', axis=1)
+        dataframe['protocol_type'] = dataframe['protocol_type'].astype('category')
+        dataframe['service'] = dataframe['service'].astype('category')
+        dataframe['flag'] = dataframe['flag'].astype('category')
+        cat_columns = dataframe.select_dtypes(['category']).columns
+        dataframe[cat_columns] = dataframe[cat_columns].apply(lambda x: x.cat.codes)
+        dataframe = dataframe.drop_duplicates(subset=None, keep='first')
 
-        value_counts = data['label'].value_counts()
-        other_index = value_counts.index[value_counts.values < 100]
+        minimal_samples = 100
+        value_counts = dataframe['label'].value_counts()
+        other_index = value_counts.index[value_counts.values < minimal_samples]
         for i in range(len(other_index)):
-            data.loc[data['label'] == other_index[i], 'label'] = b'unknown'
+            dataframe.loc[dataframe['label'] == other_index[i], 'label'] = b'unknown'
 
         le = LabelEncoder()
-        data['label'] = le.fit_transform(data['label'])
+        dataframe['label'] = le.fit_transform(dataframe['label'])
+        data = dataframe.values[:, :-1].astype(np.float32)
+        target = dataframe.values[:, -1].astype(np.int64)
+        norm = Normalizer()
+        data = norm.fit_transform(data)
         classes = le.classes_
         null_label = classes.tolist().index(b'normal.')
-        normal_df = data.loc[data['label'] == null_label, :]
-        abnormal_df = data.loc[data['label'] != null_label, :]
-        train_df = normal_df.iloc[:-10000]
-        valid_normal_df = normal_df.iloc[-10000:]
-        test_df = pd.concat([valid_normal_df, abnormal_df])
-        train_data, train_target = train_df.values[:, :39].astype(np.float32), train_df.values[:, 39].astype(np.int64)
-        test_data, test_target = test_df.values[:, :39].astype(np.float32), test_df.values[:, 39].astype(np.int64)
-        norm = Normalizer()
-        train_data = norm.fit_transform(train_data)
-        test_data = norm.transform(test_data)
-        train_id, test_id = np.arange(len(train_data)).astype(np.int64), np.arange(len(test_data)).astype(np.int64)
-        classes_to_labels = {classes[i]: i for i in range(len(classes))}
-        target_size = len(classes_to_labels)
-        return (train_id, train_data, train_target), (test_id, test_data, test_target), (
-            classes_to_labels, target_size)
+        normal_data = data[target == null_label]
+        ptb_class = bytes(self.ptb, 'utf-8')
+        for c in classes:
+            if ptb_class in c:
+                abnormal_label = classes.tolist().index(c)
+                abnormal_data = data[target == abnormal_label]
+                break
+        null = normal_data
+        alter = abnormal_data
+        meta = {'class': ptb_class}
+        return null, alter, meta
+

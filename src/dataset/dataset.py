@@ -18,8 +18,7 @@ def make_dataset(data_name, params=None, verbose=True):
     elif data_name in ['RBM']:
         dataset_['test'] = dataset.RBM(root, **params)
     elif data_name in ['KDDCUP99']:
-        dataset_['train'] = dataset.KDDCUP99(root, 'train')
-        dataset_['test'] = dataset.KDDCUP99(root, 'test')
+        dataset_['train'] = dataset.KDDCUP99(root, **params)
     elif data_name in ['EXP']:
         dataset_['test'] = dataset.EXP(root, **params)
     else:

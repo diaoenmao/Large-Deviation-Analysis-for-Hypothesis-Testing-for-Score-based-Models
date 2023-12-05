@@ -16,7 +16,7 @@ class HypothesisTest:
         self.ht = self.make_ht()
         self.result = {'threshold': [], 'fpr': [], 'fnr': []}
         self.num_threshold = 3000
-        self.num_test_emp = 10
+        self.num_test_emp = 1
         self.optim_iter = 50
 
     def make_ht(self):

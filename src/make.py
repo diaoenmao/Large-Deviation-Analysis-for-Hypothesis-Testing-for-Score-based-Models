@@ -124,6 +124,18 @@ def main():
             controls_tau_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                            control_name_e)
             controls = controls_tau_t + controls_tau_e
+        elif data == 'KDDCUP99':
+            test_mode_t = ['lrt-t', 'hst-t']
+            test_mode_e = ['lrt-e', 'hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
+            controls_tau_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                           control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
+            controls_tau_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                           control_name_e)
+            controls = controls_tau_t + controls_tau_e
         else:
             raise ValueError('not valid data')
     elif mode == 'ds':

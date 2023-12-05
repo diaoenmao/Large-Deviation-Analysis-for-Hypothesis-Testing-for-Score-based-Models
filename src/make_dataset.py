@@ -22,8 +22,8 @@ if __name__ == "__main__":
     num_samples = cfg['num_samples']
     torch.manual_seed(cfg['seed'])
     torch.cuda.manual_seed(cfg['seed'])
-    data_names = ['MVN', 'RBM', 'EXP']
-    # data_names = ['RBM']
+    # data_names = ['MVN', 'RBM', 'EXP']
+    data_names = ['KDDCUP99']
     for m in range(len(data_names)):
         data_name = data_names[m]
         if data_name == 'MVN':
@@ -76,5 +76,15 @@ if __name__ == "__main__":
                 dataset = make_dataset(data_name, params_i)
                 footprint = make_footprint(params_i)
                 save(params_i, os.path.join('output', 'params', data_name, '{}_{}'.format(data_name, footprint)))
+        elif data_name == 'KDDCUP99':
+            ptb_class = ['back', 'ipsweep', 'neptune', 'nmap', 'pod', 'portsweep', 'satan', 'smurf', 'teardrop',
+                         'warezclient', 'unknown']
+            for i in range(len(ptb_class)):
+                ptb_class_i = ptb_class[i]
+                params_i = {'ptb': ptb_class_i}
+                dataset = make_dataset(data_name, params_i)
+                footprint = make_footprint(params_i)
+                save(params_i, os.path.join('output', 'params', data_name, '{}_{}'.format(data_name, footprint)))
+            dataset = make_dataset(data_name)
         else:
             raise ValueError('Not valid data name')
