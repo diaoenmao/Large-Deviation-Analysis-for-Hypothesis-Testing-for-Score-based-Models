@@ -71,6 +71,14 @@ def make_params(data_name):
         ptb_tau = float(cfg['ptb'])
         params = {'num_trials': cfg['num_trials'], 'num_samples': cfg['num_samples'], 'power': power, 'tau': tau,
                   'num_dims': num_dims, 'ptb_tau': ptb_tau}
+    elif data_name == 'KDDCUP99':
+        W = cfg['rbm']['W']
+        v = cfg['rbm']['v']
+        h = cfg['rbm']['h']
+        num_iters = cfg['rbm']['num_iters']
+        ptb_class = cfg['ptb']
+        params = {'num_trials': 1, 'num_samples': cfg['num_samples'], 'W': W, 'v': v, 'h': h, 'num_iters': num_iters,
+                  'ptb': ptb_class}
     else:
         raise ValueError('Not valid data name')
     footprint = make_footprint(params)

@@ -182,6 +182,22 @@ def main():
             controls_W_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                          control_name_e)
             controls = controls_W_t + controls_W_e
+        elif data == 'KDDCUP99':
+            test_mode_t = ['hst-t']
+            test_mode_e = ['hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            data_size = [5, 10, 20, 40, 60, 80, 100, 200, -1]
+            data_size = [str(int(x)) for x in data_size]
+            ptb = ['back', 'ipsweep', 'neptune', 'nmap', 'pod', 'portsweep', 'satan', 'smurf', 'teardrop',
+                         'warezclient', 'unknown']
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
+            controls_W_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                         control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
+            controls_W_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
+                                         control_name_e)
+            controls = controls_W_t + controls_W_e
         else:
             raise ValueError('Not valid data')
     else:

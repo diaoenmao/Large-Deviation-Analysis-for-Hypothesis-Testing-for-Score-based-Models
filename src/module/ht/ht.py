@@ -50,9 +50,15 @@ class HypothesisTest:
     def test(self, input):
         null, alter, null_param, alter_param = input['null'], input['alter'], input['null_param'], input['alter_param']
         null_model = eval('model.{}(null_param).to(cfg["device"])'.format(cfg['model_name']))
+        if cfg['data_name'] == 'KDDCUP99':
+            null_model.fit(null)
         if self.num_samples_emp is not None:
+            if self.num_samples_emp == -1:
+                num_samples_emp = alter.size(0)
+            else:
+                num_samples_emp = self.num_samples_emp
             alter_model = []
-            alter_split = torch.split(alter, self.num_samples_emp, dim=0)
+            alter_split = torch.split(alter, num_samples_emp, dim=0)
             for i in range(self.num_test_emp):
                 alter_model_i = eval('model.{}(copy.deepcopy(null_model.params)).to(cfg["device"])'.format(
                     cfg['model_name']))

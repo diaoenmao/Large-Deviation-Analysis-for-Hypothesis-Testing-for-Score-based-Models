@@ -7,14 +7,15 @@ from config import cfg
 def make_score(data, null_model, alter_model, score_fn, n):
     batch_size = 100
     score = []
-    for i in range(data.size(0) // batch_size):
+    total_batches = int(np.ceil(data.size(0) / batch_size))
+    for i in range(total_batches):
         num_samples = n * batch_size
         indices = torch.randint(0, len(data), (num_samples,))
         data_i = data[indices]
         score_i = score_fn(data_i, null_model, alter_model)
         score_i = score_i.view(n, -1).mean(dim=0)
         score.append(score_i)
-    score = torch.cat(score)
+    score = torch.cat(score)[:data.size(0)]
     return score
 
 

@@ -12,21 +12,28 @@ class KDDCUP99(Dataset):
     def __init__(self, root, **params):
         super().__init__()
         self.root = os.path.expanduser(root)
-        self.ptb = params['ptb']
+        self.num_trials = params['num_trials']
+        self.num_samples = params['num_samples']
+        self.W = params['W']
+        self.v = params['v']
+        self.h = params['h']
+        self.num_iters = params['num_iters']
+        self.ptb_class = params['ptb']
         self.footprint = make_footprint(params)
         split_name = '{}_{}'.format(self.data_name, self.footprint)
-        if not check_exists(os.path.join(self.processed_folder)):
+        if not check_exists(os.path.join(self.processed_folder, split_name)):
+            print('Not exists {}, create from scratch with {}.'.format(split_name, params))
             self.process()
         self.null, self.alter, self.meta = load(os.path.join(os.path.join(self.processed_folder, split_name)))
 
     def __getitem__(self, index):
-        id, data, target = torch.tensor(self.id[index]), torch.tensor(self.data[index]), torch.tensor(
-            self.target[index])
-        input = {'id': id, 'data': data, 'target': target}
+        null, alter = torch.tensor(self.null), torch.tensor(self.alter)
+        null_param = {'W': self.W, 'v': self.v, 'h': self.h}
+        input = {'null': null, 'alter': alter, 'null_param': null_param, 'alter_param': None}
         return input
 
     def __len__(self):
-        return len(self.data)
+        return 1
 
     @property
     def processed_folder(self):
@@ -48,8 +55,8 @@ class KDDCUP99(Dataset):
         return
 
     def __repr__(self):
-        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nnSplit: {}'.format(self.data_name, self.__len__(), self.root,
-                                                                      self.split)
+        fmt_str = 'Dataset {}\nSize: {}\nRoot: {}\nFootprint: {}'.format(self.data_name, self.__len__(), self.root,
+                                                                         self.footprint)
         return fmt_str
 
     def make_data(self):
@@ -83,7 +90,7 @@ class KDDCUP99(Dataset):
         classes = le.classes_
         null_label = classes.tolist().index(b'normal.')
         normal_data = data[target == null_label]
-        ptb_class = bytes(self.ptb, 'utf-8')
+        ptb_class = bytes(self.ptb_class, 'utf-8')
         for c in classes:
             if ptb_class in c:
                 abnormal_label = classes.tolist().index(c)
@@ -93,4 +100,3 @@ class KDDCUP99(Dataset):
         alter = abnormal_data
         meta = {'class': ptb_class}
         return null, alter, meta
-

@@ -18,7 +18,7 @@ def make_dataset(data_name, params=None, verbose=True):
     elif data_name in ['RBM']:
         dataset_['test'] = dataset.RBM(root, **params)
     elif data_name in ['KDDCUP99']:
-        dataset_['train'] = dataset.KDDCUP99(root, **params)
+        dataset_['test'] = dataset.KDDCUP99(root, **params)
     elif data_name in ['EXP']:
         dataset_['test'] = dataset.EXP(root, **params)
     else:
@@ -74,8 +74,6 @@ def collate(input):
 def process_dataset(dataset):
     processed_dataset = dataset
     cfg['data_size'] = {k: len(processed_dataset[k]) for k in processed_dataset}
-    if cfg['data_name'] in ['KDDCUP99']:
-        cfg['target_size'] = processed_dataset['train'].target_size
     return processed_dataset
 
 

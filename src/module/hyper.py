@@ -18,8 +18,6 @@ def process_control():
     if cfg['data_name'] in ['KDDCUP99']:
         data_shape = {'KDDCUP99': [39]}
         cfg['data_shape'] = data_shape[cfg['data_name']]
-        null_label = {'KDDCUP99': 4}
-        cfg['null_label'] = null_label[cfg['data_name']]
         dim_v = cfg['data_shape'][0]
         dim_h = 50
         generator = torch.Generator()
@@ -37,8 +35,8 @@ def process_control():
         W = torch.randn(dim_v, dim_h, generator=generator)
         v = torch.randn(dim_v, generator=generator)
         h = torch.randn(dim_h, generator=generator)
-    cfg['rbm'] = {'W': W, 'v': v, 'h': h, 'num_iters': int(1000)}
-    cfg['exp'] = {'power': torch.tensor([4.]), 'tau': torch.tensor([1.]), 'num_dims': torch.tensor([3])}
+        cfg['rbm'] = {'W': W, 'v': v, 'h': h, 'num_iters': int(1000)}
+        cfg['exp'] = {'power': torch.tensor([4.]), 'tau': torch.tensor([1.]), 'num_dims': torch.tensor([3])}
     model_name = cfg['model_name']
     cfg[model_name]['batch_size'] = {'test': 1}
     cfg[model_name]['shuffle'] = {'test': False}
