@@ -16,7 +16,7 @@ class HypothesisTest:
         self.ht = self.make_ht()
         self.result = {'threshold': [], 'fpr': [], 'fnr': []}
         self.num_threshold = 3000
-        self.num_test_emp = 1
+        self.num_test_emp = 100
         self.optim_iter = 50
 
     def make_ht(self):
@@ -32,19 +32,15 @@ class HypothesisTest:
         with torch.no_grad():
             target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
             idx = np.linspace(0, 1, self.num_threshold)
-            threshold = []
-            for i in range(len(alter_model)):
-                null_score_i = make_score(null, null_model, alter_model[i], self.ht.score, 1)
-                alter_score_i = make_score(alter, null_model, alter_model[i], self.ht.score, 1)
-                score_i = torch.cat([null_score_i, alter_score_i], dim=0)
-                min_value = torch.finfo(score_i.dtype).min
-                max_value = torch.finfo(score_i.dtype).max
-                score_i = torch.clamp(score_i, min=min_value, max=max_value)
-                fpr_i, _, threshold_i = roc_curve(target.cpu().numpy(), score_i.cpu().numpy())
-                threshold_i = np.interp(idx, fpr_i, threshold_i)
-                threshold_i = torch.tensor(threshold_i, device=null.device, dtype=torch.float32)
-                threshold.append(threshold_i)
-            threshold = torch.stack(threshold, dim=0).mean(dim=0)
+            null_score = make_score(null, null_model, alter_model, self.ht.score, 1)
+            alter_score = make_score(alter, null_model, alter_model, self.ht.score, 1)
+            score = torch.cat([null_score, alter_score], dim=0)
+            min_value = torch.finfo(score.dtype).min
+            max_value = torch.finfo(score.dtype).max
+            score = torch.clamp(score, min=min_value, max=max_value)
+            fpr, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
+            threshold = np.interp(idx, fpr, threshold)
+            threshold = torch.tensor(threshold, device=null.device, dtype=torch.float32)
         return threshold
 
     def test(self, input):
@@ -58,36 +54,23 @@ class HypothesisTest:
             else:
                 num_samples_emp = self.num_samples_emp
             alter_model = []
-            alter_split = torch.split(alter, num_samples_emp, dim=0)
             for i in range(self.num_test_emp):
+                indices = torch.randint(0, len(alter), (num_samples_emp,))
+                alter_i = alter[indices]
                 alter_model_i = eval('model.{}(copy.deepcopy(null_model.params)).to(cfg["device"])'.format(
                     cfg['model_name']))
-                alter_model_i.fit(alter_split[i])
+                alter_model_i.fit(alter_i)
                 alter_model.append(alter_model_i)
         else:
             alter_model = [eval('model.{}(alter_param).to(cfg["device"])'.format(cfg['model_name']))]
         threshold = self.make_threshold(null, alter, null_model, alter_model)
         if self.ht_mode[0] in ['lrt', 'hst']:
             if self.ht_mode[1] == 'e':
-                with torch.no_grad():
-                    target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
-                    fpr, fnr = [], []
-                    for i in range(len(alter_model)):
-                        fpr_i, fnr_i = compute_empirical(null, alter, null_model, alter_model[i], threshold,
-                                                                 self.ht.score, target)
-                        fpr.append(fpr_i)
-                        fnr.append(fnr_i)
-                    fpr = np.stack(fpr, axis=0).mean(axis=0)
-                    fnr = np.stack(fnr, axis=0).mean(axis=0)
+                fpr, fnr = compute_empirical(null, alter, null_model, alter_model, threshold,
+                                             self.ht.score)
             elif self.ht_mode[1] == 't':
-                fpr, fnr = [], []
-                for i in range(len(alter_model)):
-                    fpr_i, fnr_i = compute_theoretical(null, alter, null_model, alter_model[i],
-                                                               threshold, self.ht.score, self.optim_iter)
-                    fpr.append(fpr_i)
-                    fnr.append(fnr_i)
-                fpr = np.stack(fpr, axis=0).mean(axis=0)
-                fnr = np.stack(fnr, axis=0).mean(axis=0)
+                fpr, fnr = compute_theoretical(null, alter, null_model, alter_model,
+                                               threshold, self.ht.score, self.optim_iter)
             else:
                 raise ValueError('Not valid ht mode')
         else:

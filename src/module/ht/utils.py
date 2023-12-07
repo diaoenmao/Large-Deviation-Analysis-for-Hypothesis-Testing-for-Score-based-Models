@@ -9,40 +9,43 @@ def make_score(data, null_model, alter_model, score_fn, n):
     score = []
     total_batches = int(np.ceil(data.size(0) / batch_size))
     for i in range(total_batches):
+        model_idx = i % len(alter_model)
         num_samples = n * batch_size
         indices = torch.randint(0, len(data), (num_samples,))
         data_i = data[indices]
-        score_i = score_fn(data_i, null_model, alter_model)
+        score_i = score_fn(data_i, null_model, alter_model[model_idx])
         score_i = score_i.view(n, -1).mean(dim=0)
         score.append(score_i)
     score = torch.cat(score)[:data.size(0)]
     return score
 
 
-def compute_empirical(null, alter, null_model, alter_model, threshold, score_fn, target):
-    null_score = make_score(null, null_model, alter_model, score_fn,
-                            cfg['num_samples_test'])
-    alter_score = make_score(alter, null_model, alter_model, score_fn,
-                             cfg['num_samples_test'])
-    score = torch.cat([null_score, alter_score], dim=0)
+def compute_empirical(null, alter, null_model, alter_model, threshold, score_fn):
+    with torch.no_grad():
+        target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
+        null_score = make_score(null, null_model, alter_model, score_fn,
+                                cfg['num_samples_test'])
+        alter_score = make_score(alter, null_model, alter_model, score_fn,
+                                 cfg['num_samples_test'])
+        score = torch.cat([null_score, alter_score], dim=0)
 
-    # Expand dimensions to allow broadcasting
-    target = target[:, None].cpu().numpy()  # Shape [N, 1]
-    score = score[:, None].cpu().numpy()  # Shape [N, 1]
-    threshold = threshold.cpu().numpy()
+        # Expand dimensions to allow broadcasting
+        target = target[:, None].cpu().numpy()  # Shape [N, 1]
+        score = score[:, None].cpu().numpy()  # Shape [N, 1]
+        threshold = threshold.cpu().numpy()
 
-    # Generate predictions based on thresholds
-    pred = (score >= threshold).astype(float)    # Shape [N, T] where T is number of thresholds
+        # Generate predictions based on thresholds
+        pred = (score >= threshold).astype(float)    # Shape [N, T] where T is number of thresholds
 
-    # Compute TP, TN, FP, FN
-    TP = np.sum((pred == 1) & (target == 1), axis=0).astype(float)
-    TN = np.sum((pred == 0) & (target == 0), axis=0).astype(float)
-    FP = np.sum((pred == 1) & (target == 0), axis=0).astype(float)
-    FN = np.sum((pred == 0) & (target == 1), axis=0).astype(float)
+        # Compute TP, TN, FP, FN
+        TP = np.sum((pred == 1) & (target == 1), axis=0).astype(float)
+        TN = np.sum((pred == 0) & (target == 0), axis=0).astype(float)
+        FP = np.sum((pred == 1) & (target == 0), axis=0).astype(float)
+        FN = np.sum((pred == 0) & (target == 1), axis=0).astype(float)
 
-    # Compute FPR and FNR
-    FPR = FP / (FP + TN)
-    FNR = FN / (TP + FN)
+        # Compute FPR and FNR
+        FPR = FP / (FP + TN)
+        FNR = FN / (TP + FN)
 
     return FPR, FNR
 
