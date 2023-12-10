@@ -58,8 +58,8 @@ def main():
             n_t = ['1']
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
-            ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
-                        1, 2]
+            ptb_mean = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                        0.04, 0.045, 0.05, 0.075, 0.1]
             ptb_logvar = float(0)
             for i in range(len(ptb_mean)):
                 ptb_mean_i = float(ptb_mean[i])
@@ -73,8 +73,8 @@ def main():
                                             control_name_e)
             ptb = []
             ptb_mean = float(0)
-            ptb_logvar = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9,
-                          0.95, 1, 2]
+            ptb_logvar = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                          0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_logvar)):
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_i = '{}-{}'.format(ptb_mean, ptb_logvar_i)
@@ -111,8 +111,8 @@ def main():
             n_t = ['1']
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
-            ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
-                       2.0]
+            ptb_tau = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                       0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_tau)):
                 ptb_tau_i = float(ptb_tau[i])
                 ptb_i = '{}'.format(ptb_tau_i)
@@ -124,20 +124,6 @@ def main():
             controls_tau_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                            control_name_e)
             controls = controls_tau_t + controls_tau_e
-        elif data == 'KDDCUP99':
-            test_mode_t = ['lrt-t', 'hst-t']
-            test_mode_e = ['lrt-e', 'hst-e']
-            n_t = ['1']
-            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
-            control_name_t = [[[data], [model], test_mode_t, ptb, n_t]]
-            controls_tau_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                           control_name_t)
-            control_name_e = [[[data], [model], test_mode_e, ptb, n_e]]
-            controls_tau_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
-                                           control_name_e)
-            controls = controls_tau_t + controls_tau_e
-        else:
-            raise ValueError('not valid data')
     elif mode == 'ds':
         script_name = [['{}_ht.py'.format(run)]]
         if data == 'MVN':
@@ -147,7 +133,7 @@ def main():
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
-            ptb_mean = float(1)
+            ptb_mean = float(0.01)
             ptb_logvar = float(0)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
@@ -157,7 +143,7 @@ def main():
             controls_mean_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                             control_name_e)
             ptb_mean = float(0)
-            ptb_logvar = float(1)
+            ptb_logvar = float(0.1)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_logvar_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
@@ -190,7 +176,7 @@ def main():
             data_size = [5, 10, 20, 40, 60, 80, 100, 200, -1]
             data_size = [str(int(x)) for x in data_size]
             ptb = ['back', 'ipsweep', 'neptune', 'nmap', 'pod', 'portsweep', 'satan', 'smurf', 'teardrop',
-                         'warezclient', 'unknown']
+                   'warezclient', 'unknown']
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_W_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                          control_name_t)

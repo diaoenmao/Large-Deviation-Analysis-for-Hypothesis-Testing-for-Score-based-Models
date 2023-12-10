@@ -24,9 +24,6 @@ matplotlib.rcParams['axes.linewidth'] = 1.5
 matplotlib.rcParams['xtick.labelsize'] = 'large'
 matplotlib.rcParams['ytick.labelsize'] = 'large'
 
-num_trials = 10
-num_threshold = 3000
-
 
 def make_control(control_name):
     control_names = []
@@ -123,9 +120,9 @@ def make_control_list(mode, data, model):
             ptb_mean = float(0)
             ptb_logvar = float(1)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
-            control_name_t = [[[data], test_mode_t, ptb, n_t, data_size]]
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_logvar_t = make_control(control_name_t)
-            control_name_e = [[[data], test_mode_e, ptb, n_e, data_size]]
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
             controls_logvar_e = make_control(control_name_e)
             controls = controls_mean_t + controls_logvar_t + controls_mean_e + controls_logvar_e
         elif data == 'RBM':
@@ -142,6 +139,21 @@ def make_control_list(mode, data, model):
             control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
             controls_W_e = make_control(control_name_e)
             controls = controls_W_t + controls_W_e
+        elif data == 'KDDCUP99':
+            test_mode_t = ['hst-t']
+            test_mode_e = ['hst-e']
+            n_t = ['1']
+            n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
+            data_size = [5, 10, 20, 40, 60, 80, 100, 200, -1]
+            data_size = [str(int(x)) for x in data_size]
+            # ptb = ['back', 'ipsweep', 'neptune', 'nmap', 'pod', 'portsweep', 'satan', 'smurf', 'teardrop',
+            #        'warezclient', 'unknown']
+            ptb = ['satan']
+            control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
+            controls_W_t = make_control(control_name_t)
+            control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
+            controls_W_e = make_control(control_name_e)
+            controls = controls_W_t + controls_W_e
         else:
             raise ValueError('Not valid data')
     else:
@@ -150,22 +162,31 @@ def make_control_list(mode, data, model):
 
 
 def main():
-    # mode = ['ptb', 'ds']
-    data_name = ['MVN', 'RBM', 'EXP']
-    # data_name = ['RBM']
-    mode = ['ptb']
+    mode = ['ptb', 'ds']
+    data_name = ['MVN', 'RBM', 'EXP', 'KDDCUP99']
+    mode = ['ds']
+    data_name = ['KDDCUP99']
     controls = []
     for i in range(len(mode)):
         mode_i = mode[i]
         for j in range(len(data_name)):
             data_j = data_name[j]
-            model_j = data_j.lower()
+            if mode_i in ['ptb'] and data_j in ['KDDCUP99']:
+                continue
+            if mode_i in ['ds'] and data_j in ['EXP']:
+                continue
+            if data_j in ['MVN', 'RBM', 'EXP']:
+                model_j = data_j.lower()
+            elif data_j in ['KDDCUP99']:
+                model_j = 'rbm'
+            else:
+                raise ValueError('Not valid model')
             control_list = make_control_list(mode_i, data_j, model_j)
             controls = controls + control_list
     processed_result = process_result(controls)
     df_mean = make_df(processed_result, 'mean', True)
     df_history = make_df(processed_result, 'history', False)
-    make_vis_exponent(df_history)
+    make_vis(df_history)
     return
 
 
@@ -194,6 +215,7 @@ def gather_result(control, model_tag, processed_result):
                 metric_name_ = 'test/{}'.format(metric_name)
                 processed_result[metric_name_]['history'][exp_idx] = np.stack(
                     base_result['ht_state_dict'][metric_name], axis=0)
+            num_trials = 10 if 'KDDCUP99' not in model_tag else 1
             for i in range(num_trials):
                 threshold_i = processed_result['test/threshold']['history'][exp_idx][i]
                 fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
@@ -271,8 +293,7 @@ def make_df(processed_result, mode, write):
     return df
 
 
-def make_vis_exponent(df_history):
-    label_dict = {'lrt': 'LRT', 'hst': 'HST'}
+def make_vis(df_history):
     colors = plt.cm.get_cmap('tab10').colors
     n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
     color_dict = {'lrt': {'t': {'1': colors[-1]},
@@ -304,10 +325,11 @@ def make_vis_exponent(df_history):
         }
     }
     marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
-    loc_dict = {'fpr': 'upper right', 'fnr': 'lower left'}
+    loc_dict = {'fpr': 'lower left', 'fnr': 'lower right'}
     fontsize_dict = {'legend': 10, 'label': 16, 'ticks': 16}
     metric_name_name_dict = {'fpr': 'Positive Error Exponent', 'fnr': 'Negative Error Exponent'}
     figsize = (5, 4)
+    num_threshold = 3000
     fig = {}
     ax_dict_1 = {}
     for df_name in df_history:
@@ -316,10 +338,15 @@ def make_vis_exponent(df_history):
         mask = metric_name in ['fpr', 'fnr'] and stat == 'mean'
         if mask:
             ht_mode, n = df_name_list[2], df_name_list[4]
-            # print(df_name_list)
             ht_mode_list = df_name_list[2].split('-')
             df_name_threshold = '_'.join([*df_name_list[:-2], 'threshold', 'mean'])
-            fig_name = '_'.join([*df_name_list[:2], ht_mode_list[0], df_name_list[3], df_name_list[-2]])
+            if len(df_name_list) == 7:
+                fig_name = '_'.join([*df_name_list[:2], ht_mode_list[0], df_name_list[3], df_name_list[-2]])
+            elif len(df_name_list) == 8:
+                fig_name = '_'.join([*df_name_list[:2], ht_mode_list[0], df_name_list[3], df_name_list[5],
+                                     df_name_list[-2]])
+            else:
+                raise ValueError('Not valid len')
             fig[fig_name] = plt.figure(fig_name, figsize=figsize)
             if fig_name not in ax_dict_1:
                 ax_dict_1[fig_name] = fig[fig_name].add_subplot(111)
@@ -330,12 +357,12 @@ def make_vis_exponent(df_history):
             y = df_history[df_name].iloc[0].to_numpy()
             y = y.reshape(-1, num_threshold)
             if ht_mode_list[1] == 'e':
-                n_ = float(df_name_list[-3])
+                n_ = float(df_name_list[4])
                 y = 1 / n_ * np.log(y)
             else:
                 y = np.log(y)
             y_mean = y.mean(axis=0)
-            if len(y_mean[y_mean>-np.inf]) == 0:
+            if len(y_mean[y_mean > -np.inf]) == 0:
                 continue
             y_std = y.std(axis=0) / np.sqrt(y.shape[0])
             sorted_indices = np.argsort(x)
@@ -357,15 +384,40 @@ def make_vis_exponent(df_history):
             ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
             ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            if ht_mode_list[1] == 'e' and n == '128':
-                ax_1.set_ylim(min(y_mean[y_mean>-np.inf]), 0.01)
+            # if ht_mode_list[1] == 'e' and n == '128':
+            #     ylim_mask = y_mean > -np.inf
+            #     y_min = min(y_mean[ylim_mask])
+            #     y_max = 0.01 * abs(y_min)
+            #     ax_1.set_ylim([y_min, y_max])
+            #     x_values = []
+            #     lines = ax_1.get_lines()
+            #     for i in range(len(lines)):
+            #         x_value = lines[i].get_xdata()
+            #         y_value = lines[i].get_ydata()
+            #         xlim_mask_i = (y_value > y_min) & (y_value < y_max)
+            #         x_value = x_value[xlim_mask_i]
+            #         x_values.extend(x_value)
+            #     x_min = min(x_values)
+            #     x_max = max(x_values)
+            #     if metric_name == 'fpr':
+            #         x_max = x_max + 0.1 * (x_max - x_min)
+            #     elif metric_name == 'fnr':
+            #         x_min = x_min - 0.1 * (x_max - x_min)
+            #     else:
+            #         raise ValueError('Not valid metric name')
+            #     ax_1.set_xlim([x_min, x_max])
             ax_1.legend(fontsize=fontsize_dict['legend'], loc=loc_dict[metric_name])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')
         data_name, ht_mode_0, metric_name = fig_name_list[0], fig_name_list[2], fig_name_list[-1]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
-        dir_name = 'error exponent'
+        if len(fig_name_list) == 5:
+            dir_name = 'ptb'
+        elif len(fig_name_list) == 6:
+            dir_name = 'ds'
+        else:
+            raise Value('Not valid len')
         dir_path = os.path.join(vis_path, dir_name, data_name, metric_name_name_dict[metric_name], ht_mode_0)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)

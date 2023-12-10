@@ -31,8 +31,8 @@ if __name__ == "__main__":
         if data_name == 'MVN':
             mean = cfg['mvn']['mean']
             var = cfg['mvn']['var']
-            ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
-                        1, 2]
+            ptb_mean = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                        0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_mean)):
                 ptb_mean_i = float(ptb_mean[i])
                 ptb_logvar = float(0)
@@ -41,8 +41,8 @@ if __name__ == "__main__":
                 dataset = make_dataset(data_name, params_i)
                 footprint = make_footprint(params_i)
                 save(params_i, os.path.join('output', 'params', data_name, '{}_{}'.format(data_name, footprint)))
-            ptb_logvar = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9,
-                          0.95, 1, 2]
+            ptb_logvar = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                          0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_logvar)):
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_mean = float(0)
@@ -69,8 +69,8 @@ if __name__ == "__main__":
             power = cfg['exp']['power']
             tau = cfg['exp']['tau']
             num_dims = cfg['exp']['num_dims']
-            ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
-                       2.0]
+            ptb_tau = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                       0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_tau)):
                 ptb_tau_i = float(ptb_tau[i])
                 params_i = {'num_trials': num_trials, 'num_samples': num_samples, 'power': power, 'tau': tau,
