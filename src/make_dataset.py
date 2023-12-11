@@ -19,8 +19,7 @@ if __name__ == "__main__":
     cfg['seed'] = 0
     torch.manual_seed(cfg['seed'])
     torch.cuda.manual_seed(cfg['seed'])
-    # data_names = ['MVN', 'RBM', 'EXP', 'KDDCUP99']
-    data_names = ['KDDCUP99']
+    data_names = ['MVN', 'RBM', 'EXP', 'KDDCUP99']
     cfg['control']['model_name'] = 'rbm'
     for m in range(len(data_names)):
         data_name = data_names[m]

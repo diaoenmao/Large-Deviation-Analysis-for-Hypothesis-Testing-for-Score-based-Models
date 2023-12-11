@@ -28,7 +28,7 @@ class HypothesisTest:
             raise ValueError('Not valid ht mode')
         return ht
 
-    def make_threshold(self, null, alter, null_model, alter_model):
+    def make_threshold(self, null, alter, null_model, alter_model, mode):
         with torch.no_grad():
             target = torch.cat([torch.zeros(null.size(0)), torch.ones(alter.size(0))], dim=0).to(null.device)
             idx = np.linspace(0, 1, self.num_threshold)
@@ -38,8 +38,13 @@ class HypothesisTest:
             min_value = torch.finfo(score.dtype).min
             max_value = torch.finfo(score.dtype).max
             score = torch.clamp(score, min=min_value, max=max_value)
-            fpr, _, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
-            threshold = np.interp(idx, fpr, threshold)
+            fpr, fnr, threshold = roc_curve(target.cpu().numpy(), score.cpu().numpy())
+            if mode == 'fpr':
+                threshold = np.interp(idx, fpr, threshold)
+            elif mode == 'fnr':
+                threshold = np.interp(idx, fnr, threshold)
+            else:
+                raise ValueError('Not valid mode')
             threshold = torch.tensor(threshold, device=null.device, dtype=torch.float32)
         return threshold
 
@@ -63,20 +68,26 @@ class HypothesisTest:
                 alter_model.append(alter_model_i)
         else:
             alter_model = [eval('model.{}(alter_param).to(cfg["device"])'.format(cfg['model_name']))]
-        threshold = self.make_threshold(null, alter, null_model, alter_model)
+        fpr_threshold = self.make_threshold(null, alter, null_model, alter_model, 'fpr')
+        fnr_threshold = self.make_threshold(null, alter, null_model, alter_model, 'fnr')
         if self.ht_mode[0] in ['lrt', 'hst']:
             if self.ht_mode[1] == 'e':
-                fpr, fnr = compute_empirical(null, alter, null_model, alter_model, threshold,
-                                             self.ht.score)
+                fpr, _ = compute_empirical(null, alter, null_model, alter_model, fpr_threshold,
+                                           self.ht.score)
+                _, fnr = compute_empirical(null, alter, null_model, alter_model, fnr_threshold,
+                                           self.ht.score)
             elif self.ht_mode[1] == 't':
-                fpr, fnr = compute_theoretical(null, alter, null_model, alter_model,
-                                               threshold, self.ht.score, self.optim_iter)
+                fpr, _ = compute_theoretical(null, alter, null_model, alter_model,
+                                             fpr_threshold, self.ht.score, self.optim_iter)
+                _, fnr = compute_theoretical(null, alter, null_model, alter_model,
+                                             fnr_threshold, self.ht.score, self.optim_iter)
             else:
                 raise ValueError('Not valid ht mode')
         else:
             raise ValueError('Not valid ht mode')
-        threshold = threshold.cpu().numpy()
-        output = {'threshold': threshold, 'fpr': fpr, 'fnr': fnr}
+        fpr_threshold = fpr_threshold.cpu().numpy()
+        fnr_threshold = fnr_threshold.cpu().numpy()
+        output = {'fpr': {'threshold': fpr_threshold, 'error': fpr}, 'fnr': {'threshold': fnr_threshold, 'error': fnr}}
         return output
 
     def update(self, output):
