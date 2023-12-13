@@ -91,7 +91,6 @@ class HypothesisTest:
         return output
 
     def update(self, output):
-        self.result['threshold'].append(output['threshold'])
         self.result['fpr'].append(output['fpr'])
         self.result['fnr'].append(output['fnr'])
         return
