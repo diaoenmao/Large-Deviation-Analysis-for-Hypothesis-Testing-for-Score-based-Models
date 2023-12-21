@@ -14,7 +14,7 @@ class HypothesisTest:
         self.ht_mode = ht_mode.split('-')
         self.num_samples_emp = num_samples_emp
         self.ht = self.make_ht()
-        self.result = {'threshold': [], 'fpr': [], 'fnr': []}
+        self.result = {'fpr-threshold': [], 'fpr-error': [], 'fnr-threshold': [], 'fnr-error': []}
         self.num_threshold = 3000
         self.num_test_emp = 100
         self.optim_iter = 50
@@ -72,27 +72,30 @@ class HypothesisTest:
         fnr_threshold = self.make_threshold(null, alter, null_model, alter_model, 'fnr')
         if self.ht_mode[0] in ['lrt', 'hst']:
             if self.ht_mode[1] == 'e':
-                fpr, _ = compute_empirical(null, alter, null_model, alter_model, fpr_threshold,
-                                           self.ht.score)
-                _, fnr = compute_empirical(null, alter, null_model, alter_model, fnr_threshold,
-                                           self.ht.score)
+                fpr_error, _ = compute_empirical(null, alter, null_model, alter_model, fpr_threshold,
+                                                 self.ht.score)
+                _, fnr_error = compute_empirical(null, alter, null_model, alter_model, fnr_threshold,
+                                                 self.ht.score)
             elif self.ht_mode[1] == 't':
-                fpr, _ = compute_theoretical(null, alter, null_model, alter_model,
-                                             fpr_threshold, self.ht.score, self.optim_iter)
-                _, fnr = compute_theoretical(null, alter, null_model, alter_model,
-                                             fnr_threshold, self.ht.score, self.optim_iter)
+                fpr_error, _ = compute_theoretical(null, alter, null_model, alter_model,
+                                                   fpr_threshold, self.ht.score, self.optim_iter)
+                _, fnr_error = compute_theoretical(null, alter, null_model, alter_model,
+                                                   fnr_threshold, self.ht.score, self.optim_iter)
             else:
                 raise ValueError('Not valid ht mode')
         else:
             raise ValueError('Not valid ht mode')
         fpr_threshold = fpr_threshold.cpu().numpy()
         fnr_threshold = fnr_threshold.cpu().numpy()
-        output = {'fpr': {'threshold': fpr_threshold, 'error': fpr}, 'fnr': {'threshold': fnr_threshold, 'error': fnr}}
+        output = {'fpr-threshold': fpr_threshold, 'fpr-error': fpr_error, 'fnr-threshold': fnr_threshold,
+                  'fnr-error': fnr_error}
         return output
 
     def update(self, output):
-        self.result['fpr'].append(output['fpr'])
-        self.result['fnr'].append(output['fnr'])
+        self.result['fpr-threshold'].append(output['fpr-threshold'])
+        self.result['fpr-error'].append(output['fpr-error'])
+        self.result['fnr-threshold'].append(output['fnr-threshold'])
+        self.result['fnr-error'].append(output['fnr-error'])
         return
 
     def state_dict(self):

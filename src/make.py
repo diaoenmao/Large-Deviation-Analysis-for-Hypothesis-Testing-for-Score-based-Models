@@ -143,7 +143,7 @@ def main():
             controls_mean_e = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,
                                             control_name_e)
             ptb_mean = float(0)
-            ptb_logvar = float(0.1)
+            ptb_logvar = float(0.01)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_logvar_t = make_controls(script_name, init_seeds, world_size, num_experiment, resume_mode,

@@ -42,8 +42,8 @@ def make_control_list(mode, data, model):
             n_t = ['1']
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
-            ptb_mean = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9, 0.95,
-                        1, 2]
+            ptb_mean = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                        0.04, 0.045, 0.05, 0.075, 0.1]
             ptb_logvar = float(0)
             for i in range(len(ptb_mean)):
                 ptb_mean_i = float(ptb_mean[i])
@@ -55,8 +55,8 @@ def make_control_list(mode, data, model):
             controls_mean_e = make_control(control_name_e)
             ptb = []
             ptb_mean = float(0)
-            ptb_logvar = [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.85, 0.9,
-                          0.95, 1, 2]
+            ptb_logvar = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                          0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_logvar)):
                 ptb_logvar_i = float(ptb_logvar[i])
                 ptb_i = '{}-{}'.format(ptb_mean, ptb_logvar_i)
@@ -89,8 +89,8 @@ def make_control_list(mode, data, model):
             n_t = ['1']
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             ptb = []
-            ptb_tau = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
-                       2.0]
+            ptb_tau = [0.001, 0.002, 0.004, 0.006, 0.008, 0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.025, 0.03, 0.035,
+                       0.04, 0.045, 0.05, 0.075, 0.1]
             for i in range(len(ptb_tau)):
                 ptb_tau_i = float(ptb_tau[i])
                 ptb_i = '{}'.format(ptb_tau_i)
@@ -110,7 +110,7 @@ def make_control_list(mode, data, model):
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             data_size = [5, 10, 20, 40, 60, 80, 100, 200]
             data_size = [str(int(x)) for x in data_size]
-            ptb_mean = float(1)
+            ptb_mean = float(0.01)
             ptb_logvar = float(0)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
@@ -118,7 +118,7 @@ def make_control_list(mode, data, model):
             control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
             controls_mean_e = make_control(control_name_e)
             ptb_mean = float(0)
-            ptb_logvar = float(1)
+            ptb_logvar = float(0.01)
             ptb = ['{}-{}'.format(ptb_mean, ptb_logvar)]
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_logvar_t = make_control(control_name_t)
@@ -146,9 +146,8 @@ def make_control_list(mode, data, model):
             n_e = ['1', '2', '4', '8', '16', '32', '64', '128']
             data_size = [5, 10, 20, 40, 60, 80, 100, 200, -1]
             data_size = [str(int(x)) for x in data_size]
-            # ptb = ['back', 'ipsweep', 'neptune', 'nmap', 'pod', 'portsweep', 'satan', 'smurf', 'teardrop',
-            #        'warezclient', 'unknown']
-            ptb = ['satan']
+            ptb = ['back', 'ipsweep', 'neptune', 'nmap', 'pod', 'portsweep', 'satan', 'smurf', 'teardrop',
+                   'warezclient', 'unknown']
             control_name_t = [[[data], [model], test_mode_t, ptb, n_t, data_size]]
             controls_W_t = make_control(control_name_t)
             control_name_e = [[[data], [model], test_mode_e, ptb, n_e, data_size]]
@@ -164,8 +163,8 @@ def make_control_list(mode, data, model):
 def main():
     mode = ['ptb', 'ds']
     data_name = ['MVN', 'RBM', 'EXP', 'KDDCUP99']
-    mode = ['ds']
-    data_name = ['KDDCUP99']
+    # mode = ['ds']
+    # data_name = ['KDDCUP99']
     controls = []
     for i in range(len(mode)):
         mode_i = mode[i]
@@ -184,7 +183,7 @@ def main():
             control_list = make_control_list(mode_i, data_j, model_j)
             controls = controls + control_list
     processed_result = process_result(controls)
-    df_mean = make_df(processed_result, 'mean', True)
+    df_mean = make_df(processed_result, 'mean', False)
     df_history = make_df(processed_result, 'history', False)
     make_vis(df_history)
     return
@@ -210,20 +209,18 @@ def gather_result(control, model_tag, processed_result):
         exp_idx = exp.index(control[0])
         base_result_path_i = os.path.join(result_path, '{}'.format(model_tag))
         if os.path.exists(base_result_path_i):
-            base_result = load(base_result_path_i)
-            for metric_name in base_result['ht_state_dict']:
+            # base_result = load(base_result_path_i)['ht_state_dict']
+            # base_result['fpr-threshold'] = [base_result['fpr'][i]['threshold'] for i in range(len(base_result['fpr']))]
+            # base_result['fpr-error'] = [base_result['fpr'][i]['error'] for i in range(len(base_result['fpr']))]
+            # base_result['fnr-threshold'] = [base_result['fnr'][i]['threshold'] for i in range(len(base_result['fnr']))]
+            # base_result['fnr-error'] = [base_result['fnr'][i]['error'] for i in range(len(base_result['fnr']))]
+            # del base_result['threshold']
+            # del base_result['fpr']
+            # del base_result['fnr']
+            for metric_name in base_result:
                 metric_name_ = 'test/{}'.format(metric_name)
-                processed_result[metric_name_]['history'][exp_idx] = np.stack(
-                    base_result['ht_state_dict'][metric_name], axis=0)
-            num_trials = 10 if 'KDDCUP99' not in model_tag else 1
-            for i in range(num_trials):
-                threshold_i = processed_result['test/threshold']['history'][exp_idx][i]
-                fpr_i = processed_result['test/fpr']['history'][exp_idx][i]
-                fnr_i = processed_result['test/fnr']['history'][exp_idx][i]
-                processed_result['test/threshold']['history'][exp_idx][i] = threshold_i
-                processed_result['test/fpr']['history'][exp_idx][i] = fpr_i
-                processed_result['test/fnr']['history'][exp_idx][i] = fnr_i
-            for metric_name in ['test/threshold', 'test/fpr', 'test/fnr']:
+                processed_result[metric_name_]['history'][exp_idx] = np.stack(base_result[metric_name], axis=0)
+            for metric_name in ['test/fpr-threshold', 'test/fpr-error', 'test/fnr-threshold', 'test/fnr-error']:
                 processed_result[metric_name]['history'][exp_idx] = (
                     processed_result[metric_name]['history'][exp_idx].reshape(-1).tolist())
         else:
@@ -256,7 +253,7 @@ def extract_result(extracted_processed_result, processed_result, control):
         if metric_name in ['test/AUROC']:
             if mode == 'mean':
                 output = True
-        if metric_name in ['test/threshold', 'test/fpr', 'test/fnr']:
+        if metric_name in ['test/fpr-threshold', 'test/fpr-error', 'test/fnr-threshold', 'test/fnr-error']:
             if mode == 'history':
                 output = True
         return output
@@ -335,11 +332,12 @@ def make_vis(df_history):
     for df_name in df_history:
         df_name_list = df_name.split('_')
         metric_name, stat = df_name_list[-2], df_name_list[-1]
-        mask = metric_name in ['fpr', 'fnr'] and stat == 'mean'
+        error_mode = metric_name.split('-')[0]
+        mask = metric_name in ['fpr-error', 'fnr-error'] and stat == 'mean'
         if mask:
             ht_mode, n = df_name_list[2], df_name_list[4]
             ht_mode_list = df_name_list[2].split('-')
-            df_name_threshold = '_'.join([*df_name_list[:-2], 'threshold', 'mean'])
+            df_name_threshold = '_'.join([*df_name_list[:-2], '{}-threshold'.format(error_mode), 'mean'])
             if len(df_name_list) == 7:
                 fig_name = '_'.join([*df_name_list[:2], ht_mode_list[0], df_name_list[3], df_name_list[-2]])
             elif len(df_name_list) == 8:
@@ -370,7 +368,7 @@ def make_vis(df_history):
             y_mean = y_mean[sorted_indices]
             y_std = y_std[sorted_indices]
             xlabel = 'Threshold'
-            ylabel = metric_name_name_dict[metric_name]
+            ylabel = metric_name_name_dict[error_mode]
             if ht_mode_list[1] == 't':
                 label = 'Theoretical'
             else:
@@ -384,32 +382,33 @@ def make_vis(df_history):
             ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
             ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
             ax_1.yaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
-            # if ht_mode_list[1] == 'e' and n == '128':
-            #     ylim_mask = y_mean > -np.inf
-            #     y_min = min(y_mean[ylim_mask])
-            #     y_max = 0.01 * abs(y_min)
-            #     ax_1.set_ylim([y_min, y_max])
-            #     x_values = []
-            #     lines = ax_1.get_lines()
-            #     for i in range(len(lines)):
-            #         x_value = lines[i].get_xdata()
-            #         y_value = lines[i].get_ydata()
-            #         xlim_mask_i = (y_value > y_min) & (y_value < y_max)
-            #         x_value = x_value[xlim_mask_i]
-            #         x_values.extend(x_value)
-            #     x_min = min(x_values)
-            #     x_max = max(x_values)
-            #     if metric_name == 'fpr':
-            #         x_max = x_max + 0.1 * (x_max - x_min)
-            #     elif metric_name == 'fnr':
-            #         x_min = x_min - 0.1 * (x_max - x_min)
-            #     else:
-            #         raise ValueError('Not valid metric name')
-            #     ax_1.set_xlim([x_min, x_max])
-            ax_1.legend(fontsize=fontsize_dict['legend'], loc=loc_dict[metric_name])
+            if ht_mode_list[1] == 'e' and n == '128':
+                ylim_mask = y_mean > -np.inf
+                y_min = min(y_mean[ylim_mask])
+                y_max = 0.01 * abs(y_min)
+                ax_1.set_ylim([y_min, y_max])
+                x_values = []
+                lines = ax_1.get_lines()
+                for i in range(len(lines)):
+                    x_value = lines[i].get_xdata()
+                    y_value = lines[i].get_ydata()
+                    xlim_mask_i = (y_value > y_min) & (y_value < y_max)
+                    x_value = x_value[xlim_mask_i]
+                    x_values.extend(x_value)
+                x_min = min(x_values)
+                x_max = max(x_values)
+                if error_mode == 'fpr':
+                    x_max = x_max + 0.1 * (x_max - x_min)
+                elif error_mode == 'fnr':
+                    x_min = x_min - 0.1 * (x_max - x_min)
+                else:
+                    raise ValueError('Not valid error mode')
+                ax_1.set_xlim([x_min, x_max])
+            ax_1.legend(fontsize=fontsize_dict['legend'], loc=loc_dict[error_mode])
     for fig_name in fig:
         fig_name_list = fig_name.split('_')
         data_name, ht_mode_0, metric_name = fig_name_list[0], fig_name_list[2], fig_name_list[-1]
+        error_mode = metric_name.split('-')[0]
         fig[fig_name] = plt.figure(fig_name)
         ax_dict_1[fig_name].grid(linestyle='--', linewidth='0.5')
         if len(fig_name_list) == 5:
@@ -418,7 +417,7 @@ def make_vis(df_history):
             dir_name = 'ds'
         else:
             raise Value('Not valid len')
-        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name_name_dict[metric_name], ht_mode_0)
+        dir_path = os.path.join(vis_path, dir_name, data_name, metric_name_name_dict[error_mode], ht_mode_0)
         fig_path = os.path.join(dir_path, '{}.{}'.format(fig_name, save_format))
         makedir_exist_ok(dir_path)
         plt.tight_layout()
