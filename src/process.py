@@ -209,14 +209,7 @@ def gather_result(control, model_tag, processed_result):
         exp_idx = exp.index(control[0])
         base_result_path_i = os.path.join(result_path, '{}'.format(model_tag))
         if os.path.exists(base_result_path_i):
-            # base_result = load(base_result_path_i)['ht_state_dict']
-            # base_result['fpr-threshold'] = [base_result['fpr'][i]['threshold'] for i in range(len(base_result['fpr']))]
-            # base_result['fpr-error'] = [base_result['fpr'][i]['error'] for i in range(len(base_result['fpr']))]
-            # base_result['fnr-threshold'] = [base_result['fnr'][i]['threshold'] for i in range(len(base_result['fnr']))]
-            # base_result['fnr-error'] = [base_result['fnr'][i]['error'] for i in range(len(base_result['fnr']))]
-            # del base_result['threshold']
-            # del base_result['fpr']
-            # del base_result['fnr']
+            base_result = load(base_result_path_i)['ht_state_dict']
             for metric_name in base_result:
                 metric_name_ = 'test/{}'.format(metric_name)
                 processed_result[metric_name_]['history'][exp_idx] = np.stack(base_result[metric_name], axis=0)
