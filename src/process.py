@@ -380,19 +380,24 @@ def make_vis(df_history):
                 y_min = min(y_mean[ylim_mask])
                 y_max = 0.01 * abs(y_min)
                 ax_1.set_ylim([y_min, y_max])
-                x_values = []
                 lines = ax_1.get_lines()
+                x_min = []
+                x_max = []
                 for i in range(len(lines)):
                     x_value = lines[i].get_xdata()
                     y_value = lines[i].get_ydata()
                     xlim_mask_i = (y_value > y_min) & (y_value < y_max)
                     x_value = x_value[xlim_mask_i]
-                    x_values.extend(x_value)
-                x_min = min(x_values)
-                x_max = max(x_values)
+                    if len(x_value) > 0:
+                        x_min.append(min(x_value))
+                        x_max.append(max(x_value))
                 if error_mode == 'fpr':
+                    x_max = max(x_max)
+                    x_min = max(x_min)
                     x_max = x_max + 0.1 * (x_max - x_min)
                 elif error_mode == 'fnr':
+                    x_max = min(x_max)
+                    x_min = min(x_min)
                     x_min = x_min - 0.1 * (x_max - x_min)
                 else:
                     raise ValueError('Not valid error mode')
