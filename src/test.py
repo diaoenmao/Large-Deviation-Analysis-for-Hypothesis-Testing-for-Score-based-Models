@@ -29,13 +29,14 @@ def main():
         result = load(file_path)
         base_result = result['ht_state_dict']
 
-        base_result['fpr-threshold'] = [base_result['fpr'][i]['threshold'] for i in range(len(base_result['fpr']))]
-        base_result['fpr-error'] = [base_result['fpr'][i]['error'] for i in range(len(base_result['fpr']))]
-        base_result['fnr-threshold'] = [base_result['fnr'][i]['threshold'] for i in range(len(base_result['fnr']))]
-        base_result['fnr-error'] = [base_result['fnr'][i]['error'] for i in range(len(base_result['fnr']))]
-        del base_result['threshold']
-        del base_result['fpr']
-        del base_result['fnr']
+        if 'fpr' in base_result:
+            base_result['fpr-threshold'] = [base_result['fpr'][i]['threshold'] for i in range(len(base_result['fpr']))]
+            base_result['fpr-error'] = [base_result['fpr'][i]['error'] for i in range(len(base_result['fpr']))]
+            base_result['fnr-threshold'] = [base_result['fnr'][i]['threshold'] for i in range(len(base_result['fnr']))]
+            base_result['fnr-error'] = [base_result['fnr'][i]['error'] for i in range(len(base_result['fnr']))]
+            del base_result['threshold']
+            del base_result['fpr']
+            del base_result['fnr']
         result['ht_state_dict'] = base_result
 
         output_file_path = os.path.join(output_folder_path, filename)

@@ -10,7 +10,7 @@ from collections import defaultdict
 from scipy.integrate import quad
 
 result_path = os.path.join('output', 'result')
-save_format = 'png'
+save_format = 'pdf'
 vis_path = os.path.join('output', 'vis', '{}'.format(save_format))
 num_experiment = 1
 exp = [str(x) for x in list(range(num_experiment))]
@@ -316,9 +316,9 @@ def make_vis(df_history):
     }
     marker_dict = {'lrt-e': 'o', 'hst-e': 's', 'lrt-t': 'p', 'hst-t': 'd'}
     loc_dict = {'fpr': 'lower left', 'fnr': 'lower right'}
-    fontsize_dict = {'legend': 10, 'label': 16, 'ticks': 16}
+    fontsize_dict = {'legend': 12, 'label': 16, 'ticks': 16}
     metric_name_name_dict = {'fpr': 'Positive Error Exponent', 'fnr': 'Negative Error Exponent'}
-    figsize = (5, 4)
+    figsize = (6.4, 4.8)
     num_threshold = 3000
     fig = {}
     ax_dict_1 = {}
@@ -370,7 +370,7 @@ def make_vis(df_history):
                       color=color_dict[ht_mode_list[0]][ht_mode_list[1]][n],
                       linestyle=linestyle_dict[ht_mode_list[0]][ht_mode_list[1]][n])
             ax_1.fill_between(x, (y_mean - y_std), (y_mean + y_std),
-                              color=color_dict[ht_mode_list[0]][ht_mode_list[1]][n], alpha=.1)
+                              color=color_dict[ht_mode_list[0]][ht_mode_list[1]][n], alpha=0.1)
             ax_1.set_xlabel(xlabel, fontsize=fontsize_dict['label'])
             ax_1.set_ylabel(ylabel, fontsize=fontsize_dict['label'])
             ax_1.xaxis.set_tick_params(labelsize=fontsize_dict['ticks'])
@@ -386,17 +386,17 @@ def make_vis(df_history):
                 for i in range(len(lines)):
                     x_value = lines[i].get_xdata()
                     y_value = lines[i].get_ydata()
-                    xlim_mask_i = (y_value > y_min) & (y_value < y_max)
+                    xlim_mask_i = (y_value > y_min) & (y_value < -0.5 * y_max)
                     x_value = x_value[xlim_mask_i]
                     if len(x_value) > 0:
                         x_min.append(min(x_value))
                         x_max.append(max(x_value))
                 if error_mode == 'fpr':
                     x_max = max(x_max)
-                    x_min = max(x_min)
+                    x_min = min(x_min)
                     x_max = x_max + 0.1 * (x_max - x_min)
                 elif error_mode == 'fnr':
-                    x_max = min(x_max)
+                    x_max = max(x_max)
                     x_min = min(x_min)
                     x_min = x_min - 0.1 * (x_max - x_min)
                 else:
