@@ -25,7 +25,7 @@ See `requirements.txt`
     ```
 
 ## Results
-- Large deviation analysis of likelihood-based and sore-based hypothesis testing for multivariate normal distribution with perturbation on $\mu$ and $\sigma_{ptb} = 0.01$.
+- Large deviation analysis of likelihood-based and sore-based hypothesis testing for multivariate normal distribution with perturbation on $\mu$ and $\sigma_{ptb} = 0.02$.
 <p align="center">
 <img src="/asset/result.png">
 </p>
