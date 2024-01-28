@@ -1,5 +1,5 @@
-# Large-Deviation-Analysis-for-Hypothesis-Testing-for-Score-based-Models
-[arXiv] This is an implementation of [Large-Deviation-Analysis-for-Hypothesis-Testing-for-Score-based-Models]()
+# Large Deviation Analysis for Hypothesis Testing for Score based Models
+[arXiv] This is an implementation of [Large Deviation Analysis for Hypothesis Testing for Score based Models]()
 
 
 ## Requirements
@@ -32,5 +32,5 @@ See `requirements.txt`
 
 ## Acknowledgements
 *Enmao Diao  
-Taposh Banerjee
+Taposh Banerjee  
 Vahid Tarokh*
